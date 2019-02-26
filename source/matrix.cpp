@@ -16,31 +16,39 @@ Mat::Mat(int w, int h, int c)
 
 Mat Mat::clone() const
 {
-    Mat output(w, h,c);
+    Mat output(w, h, c);
     memcpy(output.data, data, size_t(size()) * sizeof(float));
     return output;
 }
 
-Mat& Mat::zero()
+Mat &Mat::zero()
 {
     memset(data, 0, size_t(size()) * sizeof(float));
     return *this;
 }
 
-float Mat::get(int x, int y, int c)
+float Mat::get(int x, int y, int c) const
 {
-    // no padding mode
-    //assert(x >= 0 && x < this->w && y < this->h && y >= 0 && c < this->c);
+    assert(x >= 0 && x < this->w && y >= 0 && y < this->h && c >= 0 && c < this->c);
+    return data[c * h * w + y * w + x];
+}
 
-    // zero border mode
-    //if (x < 0 || x >= this->w || y < 0 || y >= this->h || c < 0 || c >= this->c) return 0;
-
-    // clamp border mode
-    x = vs::clampTo(x, 0, this->w - 1);
-    y = vs::clampTo(y, 0, this->h - 1);
-    c = vs::clampTo(c, 0, this->c - 1);
-
-    return data[c * h * w  +  y * w + x];
+float Mat::get(int x, int y, int c, BorderMode border) const
+{
+    if (border == Clamp)
+    {
+        x = vs::clampTo(x, 0, this->w - 1);
+        y = vs::clampTo(y, 0, this->h - 1);
+        c = vs::clampTo(c, 0, this->c - 1);
+        return get(x, y, c);
+    }
+    else
+    {
+        if (x < 0 || x >= this->w || y < 0 || y >= this->h || c < 0 || c >= this->c)
+            return 0;
+            
+        return get(x, y, c);
+    }
 }
 
 Mat &Mat::set(int x, int y, int c, float v)
@@ -57,7 +65,8 @@ Mat &Mat::add(int c, float v)
 {
     assert(c >= 0 && c < this->c);
 
-    for (int i = 0; i != w * h; ++i) {
+    for (int i = 0; i != w * h; ++i)
+    {
         data[c * h * w + i] += v;
     }
 
@@ -66,7 +75,8 @@ Mat &Mat::add(int c, float v)
 
 Mat &Mat::add(float v)
 {
-    for (int k = 0; k != c; ++k) {
+    for (int k = 0; k != c; ++k)
+    {
         add(k, v);
     }
 
@@ -103,7 +113,8 @@ Mat &Mat::mult(int c, float v)
 {
     assert(c >= 0 && c < this->c);
 
-    for (int i = 0; i != w * h; ++i) {
+    for (int i = 0; i != w * h; ++i)
+    {
         data[c * h * w + i] *= v;
     }
 
@@ -112,7 +123,8 @@ Mat &Mat::mult(int c, float v)
 
 Mat &Mat::mult(float v)
 {
-    for (int k = 0; k != c; ++k) {
+    for (int k = 0; k != c; ++k)
+    {
         mult(k, v);
     }
 
@@ -121,13 +133,14 @@ Mat &Mat::mult(float v)
 
 Mat &Mat::featureNormalize(int c)
 {
-      //TODO:
+    //TODO:
     return *this;
 }
 
 Mat &Mat::featureNormalize()
 {
-    for (int k = 0; k != c; ++k) {
+    for (int k = 0; k != c; ++k)
+    {
         featureNormalize(k);
     }
     return *this;
@@ -141,7 +154,8 @@ Mat &Mat::l1Normalize(int c)
 
 Mat &Mat::l1Normalize()
 {
-    for (int k = 0; k != c; ++k) {
+    for (int k = 0; k != c; ++k)
+    {
         l1Normalize(k);
     }
     return *this;
@@ -149,7 +163,8 @@ Mat &Mat::l1Normalize()
 
 Mat &Mat::clamp(int c, float min, float max)
 {
-    for (int i = 0; i != w * h; ++i) {
+    for (int i = 0; i != w * h; ++i)
+    {
         data[c * h * w + i] = vs::clampTo(data[c * h * w + i], min, max);
     }
 
@@ -158,7 +173,8 @@ Mat &Mat::clamp(int c, float min, float max)
 
 Mat &Mat::clamp(float min, float max)
 {
-    for (int k = 0; k != c; ++k) {
+    for (int k = 0; k != c; ++k)
+    {
         clamp(k, min, max);
     }
     return *this;
@@ -176,7 +192,8 @@ int Mat::size() const
 
 void Mat::reshape(int w, int h, int c)
 {
-    if (this->w == w && this->h == h && this->c == c) {
+    if (this->w == w && this->h == h && this->c == c)
+    {
         return;
     }
 
@@ -200,17 +217,18 @@ void Mat::reshape(int w, int h, int c)
     }
 }
 
-
 std::ostream &Mat::print(std::ostream &out, int max_cols, int max_rows)
 {
     out << "Header " << w << "x" << h << "x" << c << std::endl;
     out << std::fixed << std::setprecision(2);
 
-    if (max_cols < 0) {
+    if (max_cols < 0)
+    {
         max_cols = w;
     }
 
-    if (max_rows < 0) {
+    if (max_rows < 0)
+    {
         max_rows = h;
     }
 
@@ -254,17 +272,28 @@ bool sameMat(const Mat &a, const Mat &b)
 {
     float const epsilon = 0.005f;
 
-    if(a.w != b.w || a.h != b.h || a.c != b.c) {
-        //printf("Expected %d x %d x %d image, got %d x %d x %d\n", b.w, b.h, b.c, a.w, a.h, a.c);
+    if (a.w != b.w || a.h != b.h || a.c != b.c)
+    {
+        printf("Expected %d x %d x %d image, got %d x %d x %d\n", b.w, b.h, b.c, a.w, a.h, a.c);
         return false;
     }
 
-    for(int i = 0; i < a.w * a.h * a.c; ++i){
-        if(!equivalent(a.data[i], b.data[i], epsilon)) {
-            //printf("%d %f %f\n", i, a.data[i], b.data[i]);
-            return false;
+    for (int k = 0; k < a.c; ++k)
+    {
+        for (int y = 0; y < a.h; ++y)
+        {
+            for (int x = 0; x < a.w; ++x)
+            {
+                int index = a.w * a.h * k + a.w * y + x;
+                if (!equivalent(a.data[index], b.data[index], epsilon))
+                {
+                    printf("(%d %d %d) %f %f\n", x, y, k, a.data[index], b.data[index]);
+                    return false;
+                }
+            }
         }
     }
+
     return true;
 }
 

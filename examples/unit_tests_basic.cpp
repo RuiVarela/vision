@@ -15,10 +15,10 @@ void test_get_pixel(){
     UTEST(vs::equivalent(0.0f, im.get(2,0,1)));
 
     // Test padding
-    UTEST(vs::equivalent(1.0f, im.get(0,3,1)));
-    UTEST(vs::equivalent(1.0f, im.get(7,8,0)));
-    UTEST(vs::equivalent(0.0f, im.get(7,8,1)));
-    UTEST(vs::equivalent(1.0f, im.get(7,8,2)));
+    UTEST(vs::equivalent(1.0f, im.get(0,3,1, vs::BorderMode::Clamp)));
+    UTEST(vs::equivalent(1.0f, im.get(7,8,0, vs::BorderMode::Clamp)));
+    UTEST(vs::equivalent(0.0f, im.get(7,8,1, vs::BorderMode::Clamp)));
+    UTEST(vs::equivalent(1.0f, im.get(7,8,2, vs::BorderMode::Clamp)));
 }
 
 void test_set_pixel(){

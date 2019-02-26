@@ -219,31 +219,67 @@ void hsv2rgbInplace(Mat &inplace)
     hsv2rgb(inplace, inplace);
 }
 
+float bilinear_interpolate(Mat const& im, float x, float y, int c)
+{
+    int ix = int(floorf(x));
+    int iy = int(floorf(y));
 
+    float dx = x - ix;
+    float dy = y - iy;
 
+    float val = (1-dy) * (1-dx) * im.get(ix, iy, c, BorderMode::Zero) + 
+                dy     * (1-dx) * im.get(ix, iy+1, c, BorderMode::Zero) + 
+                (1-dy) *   dx   * im.get(ix+1, iy, c, BorderMode::Zero) +
+                dy     *   dx   * im.get(ix+1, iy+1, c, BorderMode::Zero);
+    return val;
+}
 
 float nn_interpolate(Mat const& im, float x, float y, int c)
 {
-    // TODO Fill in
-    return 0;
-}
+    //int ix = int(floor(x));
+    //int iy = int(floor(y));
 
-float bilinear_interpolate(Mat const& im, float x, float y, int c)
-{
-    // TODO
-    return 0;
+    int ix = int(vs::round(x));
+    int iy = int(vs::round(y));
+
+    return im.get(ix, iy, c, BorderMode::Clamp);
 }
 
 void resize(Mat &src, Mat &dst, int nw, int nh, const ResizeMode mode)
 {
     dst.reshape(nw, nh, src.c);
 
-    if (mode == Bilinear) {
+    float x_ratio = float(dst.w) / float(src.w);
+    float y_ratio = float(dst.h) / float(src.h);
 
-    } else {
-
+    if (mode == Bilinear)
+    {
+        for (int k = 0; k < dst.c; ++k)
+        {
+            for (int y = 0; y < nh; ++y)
+            {
+                for (int x = 0; x < nw; ++x)
+                {
+                    float val = bilinear_interpolate(src, x / x_ratio, y / y_ratio, k);
+                    dst.set(x, y, k, val);
+                }
+            }
+        }
     }
-
+    else
+    {
+        for (int k = 0; k < dst.c; ++k)
+        {
+            for (int y = 0; y < nh; ++y)
+            {
+                for (int x = 0; x < nw; ++x)
+                {
+                    float val = nn_interpolate(src, x / x_ratio, y / y_ratio, k);
+                    dst.set(x, y, k, val);
+                }
+            }
+        }
+    }
 }
 
 Mat resize(Mat &src, int nw, int nh, const ResizeMode mode)
@@ -252,7 +288,5 @@ Mat resize(Mat &src, int nw, int nh, const ResizeMode mode)
     resize(src, dst, nw, nh, mode);
     return dst;
 }
-
-
 
 } // namespace vs

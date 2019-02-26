@@ -1,6 +1,9 @@
 #pragma once
 
 #include <cassert>
+#include <cmath>
+#include <cstring>
+
 #include <iostream>
 #include <iomanip>
 #include <algorithm>

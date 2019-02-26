@@ -43,4 +43,7 @@ namespace vs
     template<typename T>
     inline T clampBelow(T const value, T const maximum) { return ((value > maximum) ? maximum : value); }
 
+	template<typename T>
+	inline T round(T const value) { return ( (value >= T(0.0)) ? floor(value + T(0.5)) : ceil(value - T(0.5)) ); }
+
 } // namespace cv

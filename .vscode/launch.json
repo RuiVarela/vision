@@ -9,7 +9,7 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/image_io",
+            "program": "${workspaceFolder}/unit_tests",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

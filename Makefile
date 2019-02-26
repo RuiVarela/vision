@@ -13,7 +13,7 @@ OBJS=$(subst .cpp,.o,$(SRCS))
 all: unit_tests
 
 unit_tests: $(OBJS) ./unit_tests.cpp
-        $(CXX) $(LDFLAGS) -o unit_tests $^ $(LDLIBS)
+	$(CXX) $(LDFLAGS) -o unit_tests $^ $(LDLIBS)
 
 depend: .depend
 
@@ -23,7 +23,7 @@ depend: .depend
 
 clean:
 	$(RM) $(OBJS)
-        $(RM) unit_tests
+	$(RM) unit_tests
 
 distclean: clean
 	$(RM) *~ .depend
