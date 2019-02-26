@@ -3,28 +3,23 @@
 namespace vs
 {
 
-class Mat
-{
-  public:
-    Mat();
-    Mat(int w, int h = 1, int c = 1);
-    ~Mat();
+Mat loadImage(std::string path, int channels = 0);
+bool saveImage(std::string path, Mat const &im);
 
-    void reshape(int w, int h, int c);
-    int size();
+void rgb2gray(Mat &src, Mat &dst);
+Mat rgb2gray(Mat &src);
 
-    std::ostream& print(std::ostream& out, int max_cols = 0, int max_rows = 0);
 
-    int w;
-    int h;
-    int c;
-    float *data;
+void rgb2hsv(Mat &src, Mat &dst);
+Mat rgb2hsv(Mat &src);
+void rgb2hsvInplace(Mat &inplace);
 
-  private:
-    std::shared_ptr<float> shared_data;
-};
 
-Mat loadImage(std::string const &path);
-bool saveImage(std::string const &path, Mat const &im);
+void hsv2rgb(Mat &src, Mat &dst);
+Mat hsv2rgb(Mat &src);
+void hsv2rgbInplace(Mat &inplace);
+
+
+
 
 } // namespace cv
