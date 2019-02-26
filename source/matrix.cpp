@@ -14,7 +14,7 @@ Mat::Mat(int w, int h, int c)
     reshape(w, h, c);
 }
 
-Mat Mat::clone()
+Mat Mat::clone() const
 {
     Mat output(w, h,c);
     memcpy(output.data, data, size_t(size()) * sizeof(float));
@@ -73,6 +73,32 @@ Mat &Mat::add(float v)
     return *this;
 }
 
+Mat &Mat::add(const Mat &v)
+{
+    //TODO;
+    return *this;
+}
+
+Mat Mat::add(const Mat &a, const Mat &b)
+{
+    Mat output = a.clone();
+    output.add(b);
+    return output;
+}
+
+Mat &Mat::sub(const Mat &v)
+{
+    //TODO;
+    return *this;
+}
+
+Mat Mat::sub(const Mat &a, const Mat &b)
+{
+    Mat output = a.clone();
+    output.sub(b);
+    return output;
+}
+
 Mat &Mat::mult(int c, float v)
 {
     assert(c >= 0 && c < this->c);
@@ -93,6 +119,34 @@ Mat &Mat::mult(float v)
     return *this;
 }
 
+Mat &Mat::featureNormalize(int c)
+{
+      //TODO:
+    return *this;
+}
+
+Mat &Mat::featureNormalize()
+{
+    for (int k = 0; k != c; ++k) {
+        featureNormalize(k);
+    }
+    return *this;
+}
+
+Mat &Mat::l1Normalize(int c)
+{
+    //TODO:
+    return *this;
+}
+
+Mat &Mat::l1Normalize()
+{
+    for (int k = 0; k != c; ++k) {
+        l1Normalize(k);
+    }
+    return *this;
+}
+
 Mat &Mat::clamp(int c, float min, float max)
 {
     for (int i = 0; i != w * h; ++i) {
@@ -110,7 +164,12 @@ Mat &Mat::clamp(float min, float max)
     return *this;
 }
 
-int Mat::size()
+Mat &Mat::clamp()
+{
+    return clamp(0.0f, 1.0f);
+}
+
+int Mat::size() const
 {
     return w * h * c;
 }
@@ -196,6 +255,7 @@ bool sameMat(const Mat &a, const Mat &b)
     float const epsilon = 0.005f;
 
     if(a.w != b.w || a.h != b.h || a.c != b.c) {
+        //printf("Expected %d x %d x %d image, got %d x %d x %d\n", b.w, b.h, b.c, a.w, a.h, a.c);
         return false;
     }
 

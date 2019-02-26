@@ -10,4 +10,5 @@
 
 #include "matrix.hpp"
 #include "image.hpp"
+#include "filter.hpp"
 #include "util.hpp"

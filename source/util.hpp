@@ -1,5 +1,7 @@
 #pragma once
 
+#include "vs.hpp"
+
 namespace vs
 {
     std::string toNativeSeparators(std::string const& path);

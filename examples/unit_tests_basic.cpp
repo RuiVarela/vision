@@ -1,19 +1,14 @@
 #include "../source/vs.hpp"
 
-static int tests_total = 0;
-static int tests_fail = 0;
-
 #define UTEST(EX) \
 {\
-    ++tests_total;\
     if(!(EX)) {\
         fprintf(stderr, "failed: [%s] testing [%s] in %s, line %d\n", __FUNCTION__, #EX, __FILE__, __LINE__);\
-        ++tests_fail;\
     }\
 }\
 
 void test_get_pixel(){
-    vs::Mat im = vs::loadImage("data/dots.png");
+    vs::Mat im = vs::loadImage("test/dots.png");
     // Test within image
     UTEST(vs::equivalent(0.0f, im.get(0,0,0)));
     UTEST(vs::equivalent(1.0f, im.get(1,0,1)));
@@ -27,7 +22,7 @@ void test_get_pixel(){
 }
 
 void test_set_pixel(){
-    vs::Mat im = vs::loadImage("data/dots.png");
+    vs::Mat im = vs::loadImage("test/dots.png");
     vs::Mat d = vs::Mat(4,2,4);
 
     d.set(0,0,0,0).set(0,0,1,0).set(0,0,2,0).set(0,0,3,1);
@@ -67,7 +62,7 @@ void test_grayscale()
 {
     vs::Mat im = vs::loadImage("data/colorbar.png");
     vs::Mat gray = vs::rgb2gray(im);
-    vs::Mat g = vs::loadImage("data/colorbar_gray.png");
+    vs::Mat g = vs::loadImage("test/colorbar_gray.png");
 
     UTEST(vs::sameMat(gray, g));
 }
@@ -79,7 +74,7 @@ void test_rgb_to_hsv()
     vs::rgb2hsvInplace(im);
 
 
-    vs::Mat hsv = vs::loadImage("data/dog.hsv.png");
+    vs::Mat hsv = vs::loadImage("test/dog.hsv.png");
     UTEST(vs::sameMat(im, hsv));
 }
 
@@ -92,16 +87,8 @@ void test_hsv_to_rgb()
     UTEST(vs::sameMat(im, c));
 }
 
-int main(int argc, char **argv)
+int unit_tests_basic(int argc, char **argv)
 {
-    //    vs::Mat loaded = vs::loadImage("./data/Lenna.png");
-
-    //    loaded.print(std::cout);
-    //    std::cout << "---" << std::endl;
-    //    loaded.print(std::cout, 10, 10);
-
-    //    vs::saveImage("out.jpg", loaded);
-
     test_get_pixel();
     test_set_pixel();
     test_copy();
@@ -109,7 +96,5 @@ int main(int argc, char **argv)
     test_grayscale();
     test_rgb_to_hsv();
     test_hsv_to_rgb();
-    printf("%d tests, %d passed, %d failed\n", tests_total, tests_total-tests_fail, tests_fail);
-
     return 0;
 }

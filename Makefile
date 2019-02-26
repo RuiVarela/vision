@@ -7,12 +7,13 @@ LDFLAGS=-g
 LDLIBS=
 
 SRCS=$(shell find ./source -name "*.cpp")
+SRCS+=$(shell find ./examples -name "*.cpp")
 OBJS=$(subst .cpp,.o,$(SRCS))
 
-all: image_io
+all: unit_tests
 
-image_io: $(OBJS) ./examples/image_io.cpp
-	$(CXX) $(LDFLAGS) -o image_io $^ $(LDLIBS) 
+unit_tests: $(OBJS) ./unit_tests.cpp
+        $(CXX) $(LDFLAGS) -o unit_tests $^ $(LDLIBS)
 
 depend: .depend
 
@@ -22,7 +23,7 @@ depend: .depend
 
 clean:
 	$(RM) $(OBJS)
-	$(RM) image_io
+        $(RM) unit_tests
 
 distclean: clean
 	$(RM) *~ .depend

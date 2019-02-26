@@ -220,4 +220,39 @@ void hsv2rgbInplace(Mat &inplace)
 }
 
 
+
+
+float nn_interpolate(Mat const& im, float x, float y, int c)
+{
+    // TODO Fill in
+    return 0;
+}
+
+float bilinear_interpolate(Mat const& im, float x, float y, int c)
+{
+    // TODO
+    return 0;
+}
+
+void resize(Mat &src, Mat &dst, int nw, int nh, const ResizeMode mode)
+{
+    dst.reshape(nw, nh, src.c);
+
+    if (mode == Bilinear) {
+
+    } else {
+
+    }
+
+}
+
+Mat resize(Mat &src, int nw, int nh, const ResizeMode mode)
+{
+    Mat dst;
+    resize(src, dst, nw, nh, mode);
+    return dst;
+}
+
+
+
 } // namespace vs
