@@ -29,7 +29,7 @@ public:
   float get(int x, int y, int c, BorderMode border) const;
   Mat &set(int x, int y, int c, float v);
 
-  // clamp all value between [min, max]
+  // clamp all values between [min, max]
   Mat &clamp(int c, float min, float max);
   Mat &clamp(float min, float max);
   Mat &clamp(); // 0.0f, 1.0f

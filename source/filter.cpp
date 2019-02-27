@@ -28,22 +28,53 @@ Mat makeEmbossFilter()
     return Mat();
 }
 
+static inline void convolve(
+    int const &src_x, int const &src_y, int const &f_offset,
+    const Mat &src, Mat &dst, const Mat &filter,
+    bool const &preserve)
+{
 
-void convolve(const Mat &src, Mat &dst, const Mat &filter, bool preserve)
+    float value = 0.0f;
+
+    for (int k = 0; k != src.c; ++k)
+    {
+        int filter_channel = (src.c == filter.c) ? k : 0;
+        
+        for (int y = 0; y != filter.h; ++y)
+        {
+            for (int x = 0; x != filter.w; ++x)
+            {
+                const float fv = filter.get(x, y, filter_channel);
+                const int sx = src_x + x - f_offset;
+                const int sy = src_y + y - f_offset;
+                const float sv = src.get(sx, sy, k, BorderMode::Clamp);
+                value += sv * fv;
+            }
+        }
+
+        if (preserve)
+        {
+            dst.set(src_x, src_y, k, value);
+            value = 0.0f;
+        }
+    }
+
+    if (!preserve)
+    {
+        dst.set(src_x, src_y, 0, value);
+    }
+}
+
+void convolve(const Mat &src, Mat &dst, const Mat &filter, bool const preserve)
 {
     assert((preserve && dst.c == filter.c) || filter.c == 1);
 
+    dst.reshape(src.w, src.h, preserve ? src.c : 1);
 
-    if (!preserve) {
-        assert(false);
-    }
-
-
-
-    int filter_channel = 0;
-
-
-
+    int f_offset = filter.w / 2;
+    for (int y = 0; y != src.h; ++y)
+        for (int x = 0; x != src.w; ++x)
+            convolve(x, y, f_offset, src, dst, filter, preserve);
 }
 
 Mat convolve(const Mat &src, const Mat &filter, bool preserve)

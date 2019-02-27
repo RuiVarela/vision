@@ -1,10 +1,22 @@
+# release build - make DEBUG=0
+# debug build (default) - make DEBUG=1
+
 CC=gcc
 CXX=g++
 RM=rm -f
 
-CPPFLAGS=-g -std=c++11 -Wall -pedantic
-LDFLAGS=-g
+CPPFLAGS= -std=c++11 
+LDFLAGS=
 LDLIBS=
+
+DEBUG ?= 1
+ifeq ($(DEBUG), 1)
+	CPPFLAGS +=-g -Wall -pedantic -fwrapv
+	LDFLAGS +=-g
+else
+	CPPFLAGS += -O3
+    CFLAGS +=-DNDEBUG
+endif
 
 SRCS=$(shell find ./source -name "*.cpp")
 SRCS+=$(shell find ./examples -name "*.cpp")
