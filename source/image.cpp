@@ -219,9 +219,21 @@ void hsv2rgbInplace(Mat &inplace)
     hsv2rgb(inplace, inplace);
 }
 
+float nn_interpolate(Mat const& im, float x, float y, int c) {
+
+    const int ix = int(floorf(x));
+    const int iy = int(floorf(y));
+
+    return im.get(ix, iy, c);
+}
+
 float bilinear_interpolate(Mat const& im, float x, float y, int c)
 {
     const BorderMode mode = BorderMode::Clamp;
+
+    // make sure we fall between the pixel center points
+    x -= 0.5f;
+    y -= 0.5f;
 
     const int ix = int(floorf(x));
     const int iy = int(floorf(y));
@@ -247,44 +259,24 @@ void resize(Mat &src, Mat &dst, int nw, int nh, const ResizeMode mode)
 {
     dst.reshape(nw, nh, src.c);
 
+    float (*interpolate)(Mat const&, float, float, int) = (mode == Bilinear) ? bilinear_interpolate : nn_interpolate;
 
-    if (mode == Bilinear) {
-
-        float x_ratio = float(src.w + 1.0) / float(dst.w);
-        float y_ratio = float(src.h + 1.0) / float(dst.h);
-        for (int k = 0; k < dst.c; ++k)
+    float x_ratio = float(src.w) / float(dst.w);
+    float y_ratio = float(src.h) / float(dst.h);
+    for (int k = 0; k < dst.c; ++k)
+    {
+        for (int y = 0; y < nh; ++y)
         {
-            for (int y = 0; y < nh; ++y)
+            for (int x = 0; x < nw; ++x)
             {
-                for (int x = 0; x < nw; ++x)
-                {
-                    float px = (x + 0.5f) * x_ratio - 0.5f - 1.0f;
-                    float py = (y + 0.5f) * y_ratio - 0.5f - 1.0f;
+                float px = (x + 0.5f) * x_ratio;
+                float py = (y + 0.5f) * y_ratio;
 
-                    float value = bilinear_interpolate(src, px, py, k);
-                    dst.set(x, y, k, value);
-                }
-            }
-        }
-
-    } else if  (mode == NearestNeighbor) {
-
-        float x_ratio = float(src.w) / float(dst.w);
-        float y_ratio = float(src.h) / float(dst.h);
-        for (int k = 0; k < dst.c; ++k)
-        {
-            for (int y = 0; y < nh; ++y)
-            {
-                for (int x = 0; x < nw; ++x)
-                {
-                    int sx = int(floorf((x + 0.5f) * x_ratio));
-                    int sy = int(floorf((y + 0.5f) * y_ratio));
-                    dst.set(x, y, k, src.get(sx, sy, k));
-                }
+                float value = interpolate(src, px, py, k);
+                dst.set(x, y, k, value);
             }
         }
     }
-
 }
 
 Mat resize(Mat &src, int nw, int nh, const ResizeMode mode)

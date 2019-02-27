@@ -3,11 +3,11 @@
 namespace vs
 {
 
-
 Mat makeBoxFilter(int w)
 {
-    // TODO
-    return Mat();
+    Mat filter(w, w, 1);
+    float value = 1.0f / (w * w);
+    return filter.fill(value);
 }
 
 Mat makeHighpassFilter()
@@ -31,6 +31,18 @@ Mat makeEmbossFilter()
 
 void convolve(const Mat &src, Mat &dst, const Mat &filter, bool preserve)
 {
+    assert((preserve && dst.c == filter.c) || filter.c == 1);
+
+
+    if (!preserve) {
+        assert(false);
+    }
+
+
+
+    int filter_channel = 0;
+
+
 
 }
 
@@ -50,11 +62,5 @@ void sobel(const Mat &src, Mat &mag, Mat &theta)
 {
 
 }
-
-
-
-
-
-
 
 } // namespace cv

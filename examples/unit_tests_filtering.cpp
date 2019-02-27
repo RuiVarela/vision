@@ -46,7 +46,7 @@ void test_multiple_resize()
 {
     vs::Mat im = vs::loadImage("data/dog.jpg");
 
-    for (int i = 0; i < 1; i++){
+    for (int i = 0; i < 10; i++){
         vs::Mat im1 = vs::resize(im, im.w*4, im.h*4, vs::ResizeMode::Bilinear);
         vs::Mat im2 = vs::resize(im1, im1.w/4, im1.h/4, vs::ResizeMode::Bilinear);
         im = im2;
@@ -85,6 +85,22 @@ void test_sharpen_filter(){
 }
 
 void test_convolution(){
+
+    {
+        vs::Mat filter(4, 4, 1);
+        filter.fill(4.0);
+        filter.l1Normalize();
+        UTEST(vs::equivalent(filter.get(0), 4.0f / (4 * 4 * 4)));
+        UTEST(vs::equivalent(filter.sum(0), 1.0f));
+    }
+
+    {
+        vs::Mat filter = vs::makeBoxFilter(7);
+        UTEST(vs::equivalent(filter.get(0), 1.0f / (7 * 7)));
+        UTEST(vs::equivalent(filter.sum(0), 1.0f));
+    }
+
+
     vs::Mat im = vs::loadImage("data/dog.jpg");
     vs::Mat f = vs::makeBoxFilter(7);
     vs::Mat blur = vs::convolve(im, f);
@@ -186,12 +202,13 @@ int unit_tests_filtering(int argc, char **argv)
 {
     test_nn_resize();
     test_bl_resize();
-    //test_multiple_resize();
-  
-//    test_highpass_filter();
+    //test_multiple_resize(); // very slow
+
+    test_convolution();
+    //test_highpass_filter();
 //    test_emboss_filter();
 //    test_sharpen_filter();
-//    test_convolution();
+//
 //    test_gaussian_filter();
 //    test_gaussian_blur();
 //    test_hybrid_image();

@@ -27,6 +27,26 @@ Mat &Mat::zero()
     return *this;
 }
 
+Mat &Mat::fill(int c, float v)
+{
+    assert(c >= 0 && c < this->c);
+
+    for (int i = 0; i != w * h; ++i)
+    {
+        data[c * h * w + i] = v;
+    }
+    return *this;
+}
+
+Mat &Mat::fill(float v)
+{
+    for (int k = 0; k != c; ++k)
+    {
+        fill(k, v);
+    }
+    return *this;
+}
+
 float Mat::get(int x, int y, int c) const
 {
     assert(x >= 0 && x < this->w && y >= 0 && y < this->h && c >= 0 && c < this->c);
@@ -131,6 +151,18 @@ Mat &Mat::mult(float v)
     return *this;
 }
 
+float Mat::sum(int c)
+{
+    float value = 0.0;
+
+    for (int i = 0; i != w * h; ++i)
+    {
+        value += data[c * h * w + i];
+    }
+
+    return value;
+}
+
 Mat &Mat::featureNormalize(int c)
 {
     //TODO:
@@ -148,8 +180,9 @@ Mat &Mat::featureNormalize()
 
 Mat &Mat::l1Normalize(int c)
 {
-    //TODO:
-    return *this;
+    float channel_sum = sum(c);
+    float value = 1.0f / channel_sum;
+    return mult(c, value);
 }
 
 Mat &Mat::l1Normalize()
@@ -220,7 +253,7 @@ void Mat::reshape(int w, int h, int c)
 std::ostream &Mat::print(std::ostream &out, int max_cols, int max_rows)
 {
     out << "Header " << w << "x" << h << "x" << c << std::endl;
-    out << std::fixed << std::setprecision(2);
+    out << std::fixed << std::setprecision(3);
 
     if (max_cols < 0)
     {
