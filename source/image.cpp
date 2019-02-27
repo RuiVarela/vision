@@ -221,65 +221,70 @@ void hsv2rgbInplace(Mat &inplace)
 
 float bilinear_interpolate(Mat const& im, float x, float y, int c)
 {
-    int ix = int(floorf(x));
-    int iy = int(floorf(y));
+    const BorderMode mode = BorderMode::Clamp;
 
-    float dx = x - ix;
-    float dy = y - iy;
+    const int ix = int(floorf(x));
+    const int iy = int(floorf(y));
 
-    float val = (1-dy) * (1-dx) * im.get(ix, iy, c, BorderMode::Zero) + 
-                dy     * (1-dx) * im.get(ix, iy+1, c, BorderMode::Zero) + 
-                (1-dy) *   dx   * im.get(ix+1, iy, c, BorderMode::Zero) +
-                dy     *   dx   * im.get(ix+1, iy+1, c, BorderMode::Zero);
-    return val;
-}
+    const float v1 = im.get(ix + 0, iy + 0, c, mode);
+    const float v2 = im.get(ix + 1, iy + 0, c, mode);
+    const float v3 = im.get(ix + 0, iy + 1, c, mode);
+    const float v4 = im.get(ix + 1, iy + 1, c, mode);
 
-float nn_interpolate(Mat const& im, float x, float y, int c)
-{
-    //int ix = int(floor(x));
-    //int iy = int(floor(y));
+    const float d1 = x - ix;
+    const float d2 = 1.0f - d1;
+    const float d3 = y - iy;
+    const float d4 = 1.0f - d3;
 
-    int ix = int(vs::round(x));
-    int iy = int(vs::round(y));
+    const float q1 = v1*d2 + v2*d1;
+    const float q2 = v3*d2 + v4*d1;
+    const float q  = q1*d4 + q2*d3;
 
-    return im.get(ix, iy, c, BorderMode::Clamp);
+    return q;
 }
 
 void resize(Mat &src, Mat &dst, int nw, int nh, const ResizeMode mode)
 {
     dst.reshape(nw, nh, src.c);
 
-    float x_ratio = float(dst.w) / float(src.w);
-    float y_ratio = float(dst.h) / float(src.h);
 
-    if (mode == Bilinear)
-    {
+    if (mode == Bilinear) {
+
+        float x_ratio = float(src.w + 1.0) / float(dst.w);
+        float y_ratio = float(src.h + 1.0) / float(dst.h);
         for (int k = 0; k < dst.c; ++k)
         {
             for (int y = 0; y < nh; ++y)
             {
                 for (int x = 0; x < nw; ++x)
                 {
-                    float val = bilinear_interpolate(src, x / x_ratio, y / y_ratio, k);
-                    dst.set(x, y, k, val);
+                    float px = (x + 0.5f) * x_ratio - 0.5f - 1.0f;
+                    float py = (y + 0.5f) * y_ratio - 0.5f - 1.0f;
+
+                    float value = bilinear_interpolate(src, px, py, k);
+                    dst.set(x, y, k, value);
                 }
             }
         }
-    }
-    else
-    {
+
+    } else if  (mode == NearestNeighbor) {
+
+        float x_ratio = float(src.w) / float(dst.w);
+        float y_ratio = float(src.h) / float(dst.h);
         for (int k = 0; k < dst.c; ++k)
         {
             for (int y = 0; y < nh; ++y)
             {
                 for (int x = 0; x < nw; ++x)
                 {
-                    float val = nn_interpolate(src, x / x_ratio, y / y_ratio, k);
-                    dst.set(x, y, k, val);
+                    int sx = int(floorf((x + 0.5f) * x_ratio));
+                    int sy = int(floorf((y + 0.5f) * y_ratio));
+                    dst.set(x, y, k, src.get(sx, sy, k));
                 }
             }
         }
     }
+
 }
 
 Mat resize(Mat &src, int nw, int nh, const ResizeMode mode)

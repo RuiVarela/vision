@@ -184,18 +184,18 @@ void test_sobel() {
 
 int unit_tests_filtering(int argc, char **argv)
 {
-    //test_nn_resize();
-    //test_bl_resize();
+    test_nn_resize();
+    test_bl_resize();
     //test_multiple_resize();
   
-    test_highpass_filter();
-    test_emboss_filter();
-    test_sharpen_filter();
-    test_convolution();
-    test_gaussian_filter();
-    test_gaussian_blur();
-    test_hybrid_image();
-    test_frequency_image(); 
+//    test_highpass_filter();
+//    test_emboss_filter();
+//    test_sharpen_filter();
+//    test_convolution();
+//    test_gaussian_filter();
+//    test_gaussian_blur();
+//    test_hybrid_image();
+//    test_frequency_image();
 
     return 0;
 }
