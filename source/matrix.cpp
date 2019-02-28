@@ -45,6 +45,16 @@ Mat &Mat::fill(float v)
     return *this;
 }
 
+Mat &Mat::fill(Mat const &src, int src_c, int dst_c)
+{
+    assert(src.w == w && src.h == h && src.c > src_c && c > dst_c);
+
+    for (int i = 0; i != w * h; ++i)
+        data[dst_c * w * h + i] = src.data[src_c * w * h + i];
+    
+    return *this;
+}
+
 float Mat::get(int x, int y, int c) const
 {
     assert(x >= 0 && x < this->w && y >= 0 && y < this->h && c >= 0 && c < this->c);
@@ -159,9 +169,68 @@ float Mat::sum(int c)
     return value;
 }
 
+float Mat::max(int c)
+{
+    float value = std::numeric_limits<float>::min();
+
+    for (int i = 0; i != w * h; ++i) {
+        float current = data[c * h * w + i];
+        if (current > value) {
+            value = current;
+        }
+    }
+
+    return value;
+}
+
+float Mat::min(int c)
+{
+    float value = std::numeric_limits<float>::max();
+
+    for (int i = 0; i != w * h; ++i) {
+        float current = data[c * h * w + i];
+        if (current < value) {
+            value = current;
+        }
+    }
+
+    return value;
+}
+
+void Mat::minNmax(int c, float &minv, float &maxv)
+{
+    minv = std::numeric_limits<float>::max();
+    maxv = std::numeric_limits<float>::min();
+
+    for (int i = 0; i != w * h; ++i)
+    {
+        float current = data[c * h * w + i];
+        if (current < minv)
+        {
+            minv = current;
+        }
+
+        if (current > maxv)
+        {
+            maxv = current;
+        }
+    }
+}
+
 Mat &Mat::featureNormalize(int c)
 {
-    //TODO:
+    float max_v;
+    float min_v;
+    minNmax(c, min_v, max_v);
+
+    float delta = max_v - min_v;
+
+    if (equivalent(delta, 0.0f))
+        return zero();
+
+    for (int i = 0; i != w * h; ++i)
+        data[c * h * w + i] = (data[c * h * w + i] - min_v) / delta;
+
     return *this;
 }
 
@@ -212,6 +281,10 @@ Mat &Mat::clamp()
 int Mat::size() const
 {
     return w * h * c;
+}
+
+int Mat::channelSize() const {
+    return w * h;  
 }
 
 void Mat::reshape(int w, int h, int c)

@@ -13,10 +13,15 @@ Mat makeBoxFilter(int w)
 Mat makeHighpassFilter()
 {
     Mat filter(3, 3, 1);
-    filter
-            .set(0,0,0,  0.0f).set(1,0,0, -1.0f).set(2,0,0,  0.0f)
-            .set(0,1,0, -1.0f).set(1,1,0,  4.0f).set(2,1,0, -1.0f)
-            .set(0,2,0,  0.0f).set(1,2,0, -1.0f).set(2,2,0,  0.0f);
+    float* f = filter.data;
+    (*f++) =  0.0f; (*f++) = -1.0f; (*f++) =  0.0f;
+    (*f++) = -1.0f; (*f++) =  4.0f; (*f++) = -1.0f;
+    (*f++) =  0.0f; (*f++) = -1.0f; (*f++) =  0.0f;
+
+    // filter
+    //         .set(0,0,0,  0.0f).set(1,0,0, -1.0f).set(2,0,0,  0.0f)
+    //         .set(0,1,0, -1.0f).set(1,1,0,  4.0f).set(2,1,0, -1.0f)
+    //         .set(0,2,0,  0.0f).set(1,2,0, -1.0f).set(2,2,0,  0.0f);
 
     return filter;
 }
@@ -24,22 +29,37 @@ Mat makeHighpassFilter()
 Mat makeSharpenFilter()
 {
     Mat filter(3, 3, 1);
-    filter
-            .set(0,0,0,  0.0f).set(1,0,0, -1.0f).set(2,0,0,  0.0f)
-            .set(0,1,0, -1.0f).set(1,1,0,  5.0f).set(2,1,0, -1.0f)
-            .set(0,2,0,  0.0f).set(1,2,0, -1.0f).set(2,2,0,  0.0f);
-
+    float* f = filter.data;
+    (*f++) =  0.0f; (*f++) = -1.0f; (*f++) =  0.0f;
+    (*f++) = -1.0f; (*f++) =  5.0f; (*f++) = -1.0f;
+    (*f++) =  0.0f; (*f++) = -1.0f; (*f++) =  0.0f;
     return filter;
 }
 
 Mat makeEmbossFilter()
 {
     Mat filter(3, 3, 1);
-    filter
-            .set(0,0,0, -2.0f).set(1,0,0, -1.0f).set(2,0,0,  0.0f)
-            .set(0,1,0, -1.0f).set(1,1,0,  1.0f).set(2,1,0,  1.0f)
-            .set(0,2,0,  0.0f).set(1,2,0,  1.0f).set(2,2,0,  2.0f);
+    float* f = filter.data;
+    (*f++) = -2.0f; (*f++) = -1.0f; (*f++) =  0.0f;
+    (*f++) = -1.0f; (*f++) =  1.0f; (*f++) =  1.0f;
+    (*f++) =  0.0f; (*f++) =  1.0f; (*f++) =  2.0f;
+    return filter;
+}
 
+Mat makeSobelFilter(bool horizontal)
+{
+    Mat filter(3, 3, 1);
+    if (horizontal) {
+        float* f = filter.data;
+        (*f++) = -1.0f; (*f++) =  0.0f; (*f++) =  1.0f;
+        (*f++) = -2.0f; (*f++) =  0.0f; (*f++) =  2.0f;
+        (*f++) = -1.0f; (*f++) =  0.0f; (*f++) =  1.0f;
+    } else {
+        float* f = filter.data;
+        (*f++) = -1.0f; (*f++) = -2.0f; (*f++) = -1.0f;
+        (*f++) =  0.0f; (*f++) =  0.0f; (*f++) =  0.0f;
+        (*f++) =  1.0f; (*f++) =  2.0f; (*f++) =  1.0f;
+    }
     return filter;
 }
 
@@ -68,7 +88,19 @@ Mat makeGaussianFilter(float sigma)
 
 void sobel(const Mat &src, Mat &mag, Mat &theta)
 {
+    Mat gx = convolve(src, makeSobelFilter(true), false);
+    Mat gy = convolve(src, makeSobelFilter(false), false);
 
+    mag.reshape(src.w, src.h, 1);
+    theta.reshape(src.w, src.h, 1);
+
+    for (int i = 0; i != gx.w * gx.h; ++i)
+    {
+        float gx_v = gx.data[i];
+        float gy_v = gy.data[i];
+        mag.data[i] = sqrtf(gx_v * gx_v + gy_v * gy_v);
+        theta.data[i] = atan2(gy_v, gx_v);
+    }
 }
 
 static inline void convolve(

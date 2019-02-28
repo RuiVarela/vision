@@ -35,6 +35,8 @@
         "cstdarg": "cpp",
         "ctime": "cpp",
         "iomanip": "cpp",
-        "cassert": "cpp"
+        "cassert": "cpp",
+        "cstring": "cpp",
+        "deque": "cpp"
     }
 }

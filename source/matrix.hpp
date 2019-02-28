@@ -19,11 +19,13 @@ public:
 
   void reshape(int w, int h, int c);
   int size() const;
+  int channelSize() const;
   Mat clone() const;
 
   Mat &zero();
-  Mat &fill(int c, float v);
-  Mat &fill(float v);
+  Mat &fill(int c, float v); // fills a channel with v value
+  Mat &fill(float v); // fills all channels with v value
+  Mat &fill(Mat const& src, int src_c, int dst_c); // fills a channel with values from another mat
 
   float get(int x, int y = 0, int c = 0) const;
   float get(int x, int y, int c, BorderMode border) const;
@@ -49,8 +51,12 @@ public:
   Mat &mult(int c, float v);
   Mat &mult(float v);
 
-  // sums all values in a channel
-  float sum(int c);
+  
+  float sum(int c); // sums all values in a channel
+  float max(int c); // max value in a channel
+  float min(int c); // min value in a channel
+  void minNmax(int c, float& minv, float& maxv); // min and max value in a channel
+
 
   // normalizes a channels using l1norm
   Mat &l1Normalize(int c);

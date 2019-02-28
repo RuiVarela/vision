@@ -202,6 +202,25 @@ void test_sobel() {
     UTEST(vs::sameMat(theta, gt_theta));
 }
 
+void test_sobel_color() {
+    vs::Mat im = vs::loadImage("data/dog.jpg");
+    vs::Mat mag, theta;
+    vs::sobel(im, mag, theta);
+
+    mag.featureNormalize();
+    theta.featureNormalize();
+
+    vs::Mat color(im.w, im.h, 3);
+    color.fill(theta, 0, 0);
+    color.fill(mag, 0, 1);
+    color.fill(mag, 0, 2);
+
+    vs::hsv2rgbInplace(color);
+
+    vs::Mat sobel = vs::loadImage("test/sobel_color.png");
+    UTEST(vs::sameMat(sobel, color));
+}
+
 int unit_tests_filtering(int argc, char **argv)
 {
     test_nn_resize();
@@ -216,6 +235,7 @@ int unit_tests_filtering(int argc, char **argv)
     test_hybrid_image();
     test_frequency_image();
     test_sobel();
+    test_sobel_color();
 
     return 0;
 }
