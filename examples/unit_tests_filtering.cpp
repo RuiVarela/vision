@@ -131,8 +131,6 @@ void test_gaussian_blur() {
     vs::Mat blur = vs::convolve(im, f);
     blur.clamp();
 
-    vs::saveImage("blured.png", blur);
-
     vs::Mat gt = vs::loadImage("test/dog-gauss2.png");
     UTEST(vs::sameMat(blur, gt));
 }
