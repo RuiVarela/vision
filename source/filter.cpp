@@ -12,20 +12,63 @@ Mat makeBoxFilter(int w)
 
 Mat makeHighpassFilter()
 {
-     // TODO
-    return Mat();
+    Mat filter(3, 3, 1);
+    filter
+            .set(0,0,0,  0.0f).set(1,0,0, -1.0f).set(2,0,0,  0.0f)
+            .set(0,1,0, -1.0f).set(1,1,0,  4.0f).set(2,1,0, -1.0f)
+            .set(0,2,0,  0.0f).set(1,2,0, -1.0f).set(2,2,0,  0.0f);
+
+    return filter;
 }
 
 Mat makeSharpenFilter()
 {
-     // TODO
-    return Mat();
+    Mat filter(3, 3, 1);
+    filter
+            .set(0,0,0,  0.0f).set(1,0,0, -1.0f).set(2,0,0,  0.0f)
+            .set(0,1,0, -1.0f).set(1,1,0,  5.0f).set(2,1,0, -1.0f)
+            .set(0,2,0,  0.0f).set(1,2,0, -1.0f).set(2,2,0,  0.0f);
+
+    return filter;
 }
 
 Mat makeEmbossFilter()
 {
-     // TODO
-    return Mat();
+    Mat filter(3, 3, 1);
+    filter
+            .set(0,0,0, -2.0f).set(1,0,0, -1.0f).set(2,0,0,  0.0f)
+            .set(0,1,0, -1.0f).set(1,1,0,  1.0f).set(2,1,0,  1.0f)
+            .set(0,2,0,  0.0f).set(1,2,0,  1.0f).set(2,2,0,  2.0f);
+
+    return filter;
+}
+
+Mat makeGaussianFilter(float sigma)
+{
+    assert(sigma > 1.0f);
+
+    int k = 6 * int(floorf(sigma));
+    if (k % 2 == 0) {
+        k++;
+    }
+    int const offset = k / 2;
+
+    Mat dst(k , k , 1);
+    for (int y = 0; y != dst.h; ++y) {
+        for (int x = 0; x != dst.w; ++x) {
+            int const fx = x - offset;
+            int const fy = y - offset;
+            float const g = (1.0f / (2.0f * float(M_PI) * sigma * sigma)) * exp(- (fx*fx + fy*fy) / (2.0f * sigma * sigma));
+            dst.set(x, y, 0, g);
+        }
+    }
+
+    return dst;
+}
+
+void sobel(const Mat &src, Mat &mag, Mat &theta)
+{
+
 }
 
 static inline void convolve(
@@ -82,16 +125,6 @@ Mat convolve(const Mat &src, const Mat &filter, bool preserve)
     Mat dst;
     convolve(src, dst, filter, preserve);
     return dst;
-}
-
-Mat makeGaussianFilter(float sigma)
-{
-    return Mat();
-}
-
-void sobel(const Mat &src, Mat &mag, Mat &theta)
-{
-
 }
 
 } // namespace cv

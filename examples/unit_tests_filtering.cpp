@@ -1,5 +1,7 @@
 #include "../source/vs.hpp"
 
+// https://github.com/pjreddie/vision-hw1
+
 #define UTEST(EX) \
 {\
     if(!(EX)) {\
@@ -58,7 +60,7 @@ void test_multiple_resize()
 void test_highpass_filter(){
     vs::Mat im = vs::loadImage("data/dog.jpg");
     vs::Mat f = vs::makeHighpassFilter();
-    vs::Mat blur = vs::convolve(im, f);
+    vs::Mat blur = vs::convolve(im, f, false);
     blur.clamp();
     vs::Mat gt = vs::loadImage("test/dog-highpass.png");
     UTEST(vs::sameMat(blur, gt));
@@ -112,9 +114,8 @@ void test_convolution(){
 
 void test_gaussian_filter() {
     vs::Mat f = vs::makeGaussianFilter(7.0f);
-    int i;
 
-    for(i = 0; i < f.w * f.h * f.c; i++){
+    for(int i = 0; i < f.w * f.h * f.c; i++){
         f.data[i] *= 100;
     }
 
@@ -125,16 +126,20 @@ void test_gaussian_filter() {
 void test_gaussian_blur() {
     vs::Mat im = vs::loadImage("data/dog.jpg");
     vs::Mat f = vs::makeGaussianFilter(2.0f);
+    //f.l1Normalize(); // blur should be normalized [0.0f, 1.0f] but the kernel is already normalized
+
     vs::Mat blur = vs::convolve(im, f);
     blur.clamp();
+
+    vs::saveImage("blured.png", blur);
 
     vs::Mat gt = vs::loadImage("test/dog-gauss2.png");
     UTEST(vs::sameMat(blur, gt));
 }
 
 void test_hybrid_image() {
-    vs::Mat man = vs::loadImage("data/melisa.png");
-    vs::Mat woman = vs::loadImage("data/aria.png");
+    vs::Mat man = vs::loadImage("data/melisa.png", 3);
+    vs::Mat woman = vs::loadImage("data/aria.png", 3);
     vs::Mat f = vs::makeGaussianFilter(2.0f);
     vs::Mat lfreq_man = vs::convolve(man, f);
     vs::Mat lfreq_w = vs::convolve(woman, f);
@@ -145,12 +150,11 @@ void test_hybrid_image() {
     UTEST(vs::sameMat(reconstruct, gt));
 }
 
-
 void test_frequency_image(){
     vs::Mat im = vs::loadImage("data/dog.jpg");
     vs::Mat f = vs::makeGaussianFilter(2.0f);
     vs::Mat lfreq = vs::convolve(im, f);
-    vs::Mat hfreq = vs::Mat::add(im, lfreq);
+    vs::Mat hfreq = vs::Mat::sub(im, lfreq);
     vs::Mat reconstruct = vs::Mat::add(lfreq , hfreq);
 
     vs::Mat low_freq = vs::loadImage("test/low-frequency.png");
@@ -202,17 +206,16 @@ int unit_tests_filtering(int argc, char **argv)
 {
     test_nn_resize();
     test_bl_resize();
-    //test_multiple_resize(); // very slow
-
+    test_multiple_resize(); // very slow
     test_convolution();
-    //test_highpass_filter();
-//    test_emboss_filter();
-//    test_sharpen_filter();
-//
-//    test_gaussian_filter();
-//    test_gaussian_blur();
-//    test_hybrid_image();
-//    test_frequency_image();
+    test_highpass_filter();
+    test_emboss_filter();
+    test_sharpen_filter();
+    test_gaussian_filter();
+    test_gaussian_blur();
+    test_hybrid_image();
+    test_frequency_image();
+    test_sobel();
 
     return 0;
 }

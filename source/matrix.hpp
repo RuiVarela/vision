@@ -15,7 +15,7 @@ class Mat
 {
 public:
   Mat();
-  Mat(int w, int h = 1, int c = 1);
+  explicit Mat(int w, int h = 1, int c = 1);
 
   void reshape(int w, int h, int c);
   int size() const;
@@ -59,8 +59,6 @@ public:
   Mat &featureNormalize(int c);
   Mat &featureNormalize();
 
-  std::ostream &print(std::ostream &out, int max_cols = 0, int max_rows = 0);
-
   int w;
   int h;
   int c;
@@ -69,7 +67,5 @@ public:
 private:
   std::shared_ptr<float> shared_data;
 };
-
-bool sameMat(Mat const &a, Mat const &b);
 
 } // namespace vs

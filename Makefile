@@ -14,7 +14,7 @@ ifeq ($(DEBUG), 1)
 	CPPFLAGS +=-g -Wall -pedantic -fwrapv
 	LDFLAGS +=-g
 else
-	CPPFLAGS += -O3
+        CPPFLAGS += -Ofast -flto
     CFLAGS +=-DNDEBUG
 endif
 
