@@ -61,22 +61,21 @@ float Mat::get(int x, int y, int c) const
     return data[c * h * w + y * w + x];
 }
 
-float Mat::get(int x, int y, int c, BorderMode border) const
+float Mat::getClamp(int x, int y, int c) const
 {
-    if (border == Clamp)
-    {
-        x = vs::clampTo(x, 0, this->w - 1);
-        y = vs::clampTo(y, 0, this->h - 1);
-        c = vs::clampTo(c, 0, this->c - 1);
-        return get(x, y, c);
-    }
-    else
-    {
-        if (x < 0 || x >= this->w || y < 0 || y >= this->h || c < 0 || c >= this->c)
-            return 0;
+    x = vs::clampTo(x, 0, this->w - 1);
+    y = vs::clampTo(y, 0, this->h - 1);
+    c = vs::clampTo(c, 0, this->c - 1);
+    return data[c * h * w + y * w + x];
+}
 
-        return get(x, y, c);
-    }
+float Mat::getZero(int x, int y, int c) const
+{
+    if (x < 0 || x >= this->w || y < 0 || y >= this->h || c < 0 || c >= this->c)
+        return 0;
+
+    return data[c * h * w + y * w + x];
+
 }
 
 Mat &Mat::set(int x, int y, int c, float v)

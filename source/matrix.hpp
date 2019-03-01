@@ -5,12 +5,6 @@
 namespace vs
 {
 
-enum BorderMode
-{
-  Zero,
-  Clamp
-};
-
 class Mat
 {
 public:
@@ -28,7 +22,8 @@ public:
   Mat &fill(Mat const& src, int src_c, int dst_c); // fills a channel with values from another mat
 
   float get(int x, int y = 0, int c = 0) const;
-  float get(int x, int y, int c, BorderMode border) const;
+  float getClamp(int x, int y, int c) const;
+  float getZero(int x, int y, int c) const;
   Mat &set(int x, int y, int c, float v);
 
   // clamp all values between [min, max]

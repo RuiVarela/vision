@@ -127,11 +127,14 @@ void test_gaussian_blur() {
     vs::Mat im = vs::loadImage("data/dog.jpg");
     vs::Mat f = vs::makeGaussianFilter(2.0f);
     //f.l1Normalize(); // blur should be normalized [0.0f, 1.0f] but the kernel is already normalized
-
     vs::Mat blur = vs::convolve(im, f);
     blur.clamp();
 
     vs::Mat gt = vs::loadImage("test/dog-gauss2.png");
+    UTEST(vs::sameMat(blur, gt));
+
+    blur = vs::smoothImage(im, 2.0f);
+    blur.clamp();
     UTEST(vs::sameMat(blur, gt));
 }
 
@@ -163,6 +166,21 @@ void test_frequency_image(){
     UTEST(vs::sameMat(lfreq, low_freq));
     UTEST(vs::sameMat(hfreq, high_freq));
     UTEST(vs::sameMat(reconstruct, im));
+}
+
+void test_gradients() {
+    vs::Mat gray;
+    vs::Mat im = vs::loadImage("data/dog.jpg");
+    rgb2gray(im, gray);
+
+    vs::Mat gx, gy;
+    vs::gradientGray(gray, gx, gy);
+
+    vs::Mat gx1, gy1;
+    gradient(gray, gx1, gy1);
+
+    UTEST(vs::sameMat(gx, gx1));
+    UTEST(vs::sameMat(gy, gy1));
 }
 
 void test_sobel() {
@@ -234,6 +252,7 @@ int unit_tests_filtering(int argc, char **argv)
     test_frequency_image();
     test_sobel();
     test_sobel_color();
+    test_gradients();
 
     return 0;
 }

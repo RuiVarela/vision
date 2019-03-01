@@ -83,7 +83,7 @@ bool saveImage(std::string path, Mat const &im)
     return ok;
 }
 
-void rgb2gray(Mat &src, Mat &dst)
+void rgb2gray(Mat const& src, Mat &dst)
 {
     assert(src.w >= 0 && src.h >= 0 && src.c == 3);
     dst.reshape(src.w, src.h, 1);
@@ -99,7 +99,7 @@ void rgb2gray(Mat &src, Mat &dst)
     }
 }
 
-void rgb2hsv(Mat &src, Mat &dst)
+void rgb2hsv(Mat const& src, Mat &dst)
 {
     assert(src.w >= 0 && src.h >= 0 && src.c == 3);
     dst.reshape(src.w, src.h, 3);
@@ -142,7 +142,7 @@ void rgb2hsv(Mat &src, Mat &dst)
     }
 }
 
-void hsv2rgb(Mat &src, Mat &dst)
+void hsv2rgb(Mat const& src, Mat &dst)
 {
     assert(src.w >= 0 && src.h >= 0 && src.c == 3);
     dst.reshape(src.w, src.h, 3);
@@ -187,7 +187,7 @@ void hsv2rgb(Mat &src, Mat &dst)
 }
 
 
-Mat rgb2gray(Mat &src)
+Mat rgb2gray(Mat const& src)
 {
     Mat dst;
     rgb2gray(src, dst);
@@ -195,7 +195,7 @@ Mat rgb2gray(Mat &src)
 }
 
 
-Mat rgb2hsv(Mat &src)
+Mat rgb2hsv(Mat const& src)
 {
     Mat dst;
     rgb2hsv(src, dst);
@@ -207,7 +207,7 @@ void rgb2hsvInplace(Mat &inplace)
     rgb2hsv(inplace, inplace);
 }
 
-Mat hsv2rgb(Mat &src)
+Mat hsv2rgb(Mat const& src)
 {
     Mat dst;
     hsv2rgb(src, dst);
@@ -229,8 +229,6 @@ float nn_interpolate(Mat const& im, float x, float y, int c) {
 
 float bilinear_interpolate(Mat const& im, float x, float y, int c)
 {
-    const BorderMode mode = BorderMode::Clamp;
-
     // make sure we fall between the pixel center points
     x -= 0.5f;
     y -= 0.5f;
@@ -238,10 +236,10 @@ float bilinear_interpolate(Mat const& im, float x, float y, int c)
     const int ix = int(floorf(x));
     const int iy = int(floorf(y));
 
-    const float v1 = im.get(ix + 0, iy + 0, c, mode);
-    const float v2 = im.get(ix + 1, iy + 0, c, mode);
-    const float v3 = im.get(ix + 0, iy + 1, c, mode);
-    const float v4 = im.get(ix + 1, iy + 1, c, mode);
+    const float v1 = im.getClamp(ix + 0, iy + 0, c);
+    const float v2 = im.getClamp(ix + 1, iy + 0, c);
+    const float v3 = im.getClamp(ix + 0, iy + 1, c);
+    const float v4 = im.getClamp(ix + 1, iy + 1, c);
 
     const float d1 = x - ix;
     const float d2 = 1.0f - d1;
@@ -255,7 +253,7 @@ float bilinear_interpolate(Mat const& im, float x, float y, int c)
     return q;
 }
 
-void resize(Mat &src, Mat &dst, int nw, int nh, const ResizeMode mode)
+void resize(Mat const& src, Mat &dst, int nw, int nh, const ResizeMode mode)
 {
     dst.reshape(nw, nh, src.c);
 
@@ -279,7 +277,7 @@ void resize(Mat &src, Mat &dst, int nw, int nh, const ResizeMode mode)
     }
 }
 
-Mat resize(Mat &src, int nw, int nh, const ResizeMode mode)
+Mat resize(Mat const& src, int nw, int nh, const ResizeMode mode)
 {
     Mat dst;
     resize(src, dst, nw, nh, mode);

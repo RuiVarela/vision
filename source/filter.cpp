@@ -3,12 +3,7 @@
 namespace vs
 {
 
-Mat makeBoxFilter(int w)
-{
-    Mat filter(w, w, 1);
-    float value = 1.0f / (w * w);
-    return filter.fill(value);
-}
+
 
 Mat makeHighpassFilter()
 {
@@ -46,6 +41,91 @@ Mat makeEmbossFilter()
     return filter;
 }
 
+Mat makeBoxFilter(int w)
+{
+    Mat filter(w, w, 1);
+    float value = 1.0f / (w * w);
+    return filter.fill(value);
+}
+
+
+Mat makeGaussianFilter(float sigma)
+{
+    assert(sigma > 0.0f);
+
+    int k =  int(floorf(6 * sigma));
+    if (k % 2 == 0) {
+        k++;
+    }
+    int const offset = k / 2;
+
+    float sigma2 = 2.0f * sigma * sigma;
+    float norm = 1.0f / (float(M_PI) * sigma2);
+
+    Mat dst(k, k, 1);
+    for (int y = 0; y != dst.h; ++y) {
+        for (int x = 0; x != dst.w; ++x) {
+            int const fx = x - offset;
+            int const fy = y - offset;
+            float const g = norm  * exp(- (fx*fx + fy*fy) / sigma2);
+            dst.set(x, y, 0, g);
+        }
+    }
+
+    return dst;
+}
+
+Mat makeGaussianFilter1D(float sigma)
+{
+    assert(sigma > 0.0f);
+
+    int k = int(floorf(6 * sigma));
+    if (k % 2 == 0) {
+        k++;
+    }
+    int const offset = k / 2;
+
+    float sigma2 = 2.0f * sigma * sigma;
+    float norm = 1.0f / (sqrt(2.0f * float(M_PI)) * sigma);
+
+    Mat dst(k, 1, 1);
+    for (int x = 0; x != dst.w; ++x) {
+        int const fx = x - offset;
+        float const g = norm * exp(- (fx*fx) / sigma2);
+        dst.set(x, 0, 0, g);
+    }
+
+    return dst;
+}
+
+void smoothImage(vs::Mat const& src, vs::Mat& dst, vs::Mat& tmp, float sigma) {
+    //
+    // expensive way, convolve with 2d gaussian filter
+    //
+    //Mat f = vs::makeGaussianFilter(sigma);
+    //convolve(src, dst, f);
+
+    //
+    // faster convolve with 1d horizontal filter and then with the vertical filter
+    //
+    Mat f = makeGaussianFilter1D(sigma);
+    convolve(src, tmp, f);
+    std::swap(f.w, f.h);
+    convolve(tmp, dst, f);
+}
+
+void smoothImage(vs::Mat const& src, vs::Mat& dst, float sigma) {
+    Mat tmp;
+    smoothImage(src, dst, tmp, sigma);
+}
+
+vs::Mat smoothImage(vs::Mat const& src, float sigma) {
+    Mat output;
+    smoothImage(src, output, sigma);
+    return output;
+}
+
+
 Mat makeSobelFilter(bool horizontal)
 {
     Mat filter(3, 3, 1);
@@ -63,33 +143,52 @@ Mat makeSobelFilter(bool horizontal)
     return filter;
 }
 
-Mat makeGaussianFilter(float sigma)
+void gradientGray(const Mat &src, Mat &gx, Mat &gy)
 {
-    assert(sigma > 1.0f);
+    assert(src.c == 1);
 
-    int k = 6 * int(floorf(sigma));
-    if (k % 2 == 0) {
-        k++;
-    }
-    int const offset = k / 2;
+    float* f;
+    Mat filter(3, 1, 1);
+    Mat tmp;
 
-    Mat dst(k , k , 1);
-    for (int y = 0; y != dst.h; ++y) {
-        for (int x = 0; x != dst.w; ++x) {
-            int const fx = x - offset;
-            int const fy = y - offset;
-            float const g = (1.0f / (2.0f * float(M_PI) * sigma * sigma)) * exp(- (fx*fx + fy*fy) / (2.0f * sigma * sigma));
-            dst.set(x, y, 0, g);
-        }
-    }
+    //
+    // gy
+    //
+    f = filter.data;
+    (*f++) = -1.0f; (*f++) =  0.0f; (*f++) =  1.0f;
+    convolve(src, tmp, filter);
 
-    return dst;
+    std::swap(filter.w, filter.h);
+    f = filter.data;
+    (*f++) =  1.0f; (*f++) =  2.0f; (*f++) =  1.0f;
+    convolve(tmp, gx, filter);
+
+    //
+    // gy
+    //
+    std::swap(filter.w, filter.h);
+    f = filter.data;
+    (*f++) =  1.0f; (*f++) =  2.0f; (*f++) =  1.0f;
+    convolve(src, tmp, filter);
+
+    std::swap(filter.w, filter.h);
+    f = filter.data;
+    (*f++) = -1.0f; (*f++) =  0.0f; (*f++) =  1.0f;
+    convolve(tmp, gy, filter);
+}
+
+void gradient(vs::Mat const& src, vs::Mat& gx, vs::Mat& gy) {
+    //
+    // expensive way, convolve with 2d gaussian filter
+    //
+    gx = convolve(src, makeSobelFilter(true), false);
+    gy = convolve(src, makeSobelFilter(false), false);
 }
 
 void sobel(const Mat &src, Mat &mag, Mat &theta)
 {
-    Mat gx = convolve(src, makeSobelFilter(true), false);
-    Mat gy = convolve(src, makeSobelFilter(false), false);
+    Mat gx, gy;
+    gradient(src, gx, gy);
 
     mag.reshape(src.w, src.h, 1);
     theta.reshape(src.w, src.h, 1);
@@ -104,7 +203,7 @@ void sobel(const Mat &src, Mat &mag, Mat &theta)
 }
 
 static inline void convolve(
-    int const &src_x, int const &src_y, int const &f_offset,
+    int const &src_x, int const &src_y, int const &fx_offset, int const &fy_offset,
     const Mat &src, Mat &dst, const Mat &filter,
     bool const &preserve)
 {
@@ -120,9 +219,9 @@ static inline void convolve(
             for (int x = 0; x != filter.w; ++x)
             {
                 const float fv = filter.get(x, y, filter_channel);
-                const int sx = src_x + x - f_offset;
-                const int sy = src_y + y - f_offset;
-                const float sv = src.get(sx, sy, k, BorderMode::Clamp);
+                const int sx = src_x + x - fx_offset;
+                const int sy = src_y + y - fy_offset;
+                const float sv = src.getClamp(sx, sy, k);
                 value += sv * fv;
             }
         }
@@ -146,10 +245,11 @@ void convolve(const Mat &src, Mat &dst, const Mat &filter, bool const preserve)
 
     dst.reshape(src.w, src.h, preserve ? src.c : 1);
 
-    int f_offset = filter.w / 2;
+    int fx_offset = filter.w / 2;
+    int fy_offset = filter.h / 2;
     for (int y = 0; y != src.h; ++y)
         for (int x = 0; x != src.w; ++x)
-            convolve(x, y, f_offset, src, dst, filter, preserve);
+            convolve(x, y, fx_offset, fy_offset, src, dst, filter, preserve);
 }
 
 Mat convolve(const Mat &src, const Mat &filter, bool preserve)
@@ -158,5 +258,7 @@ Mat convolve(const Mat &src, const Mat &filter, bool preserve)
     convolve(src, dst, filter, preserve);
     return dst;
 }
+
+
 
 } // namespace cv
