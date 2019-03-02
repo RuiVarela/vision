@@ -14,6 +14,17 @@ Mat::Mat(int w, int h, int c)
     reshape(w, h, c);
 }
 
+Mat::Mat(int w, int h, int c, float *ext)
+    : Mat()
+{
+    assert(ext != nullptr);
+
+    this->w = w;
+    this->h = h;
+    this->c = c;
+    this->data = ext;
+}
+
 Mat Mat::clone() const
 {
     Mat output(w, h, c);

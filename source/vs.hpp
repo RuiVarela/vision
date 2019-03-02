@@ -16,3 +16,4 @@
 #include "image.hpp"
 #include "filter.hpp"
 #include "util.hpp"
+#include "features.hpp"

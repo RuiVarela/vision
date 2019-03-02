@@ -10,6 +10,7 @@ class Mat
 public:
   Mat();
   explicit Mat(int w, int h = 1, int c = 1);
+  explicit Mat(int w, int h, int c, float* ext);
 
   void reshape(int w, int h, int c);
   int size() const;
