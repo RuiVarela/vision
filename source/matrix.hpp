@@ -10,12 +10,17 @@ class Mat
 public:
   Mat();
   explicit Mat(int w, int h = 1, int c = 1);
-  explicit Mat(int w, int h, int c, float* ext);
+  explicit Mat(int w, int h, int c, float* ext); // external memory pointer
 
   void reshape(int w, int h, int c);
   int size() const;
   int channelSize() const;
   Mat clone() const;
+
+  // views
+  // these are virtual view on a Mat data, they will point to the parent memory
+  // thus they don't allocate new memory
+  Mat channelView(int c, int count = 1);
 
   Mat &zero();
   Mat &fill(int c, float v); // fills a channel with v value

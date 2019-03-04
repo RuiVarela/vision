@@ -181,8 +181,8 @@ void gradient(vs::Mat const& src, vs::Mat& gx, vs::Mat& gy) {
     //
     // expensive way, convolve with 2d gaussian filter
     //
-    gx = convolve(src, makeSobelFilter(true), false);
-    gy = convolve(src, makeSobelFilter(false), false);
+    convolve(src, gx, makeSobelFilter(true), false);
+    convolve(src, gy, makeSobelFilter(false), false);
 }
 
 void sobel(const Mat &src, Mat &mag, Mat &theta)

@@ -32,6 +32,16 @@ Mat Mat::clone() const
     return output;
 }
 
+Mat Mat::channelView(int c, int count) {
+    assert(this->c > (c + count - 1));
+
+    Mat output(w, h, count, data + c * channelSize());
+    // share the data across mat objets
+    output.shared_data = shared_data;
+
+    return output;
+}
+
 Mat &Mat::zero()
 {
     memset(data, 0, size_t(size()) * sizeof(float));

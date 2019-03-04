@@ -76,7 +76,6 @@ void markCorners(Mat &im, Descriptors const &d)
 
 void nonMaxSupression(Mat const &im, Mat &dst, int w)
 {
-
     // image r = copy_image(im);
     // perform NMS on the response map.
     // for every pixel in the image:
@@ -91,18 +90,16 @@ void nonMaxSupression(Mat const &im, Mat &dst, int w)
     const int c = 0;
 
     for (int y = 0; y != im.h; ++y)
-        for (int x = 0; x != im.w; ++x) {
-
-            float value = dst.getClamp(x, y, c);
-
-            for (int ky = -w/2; ky < (w+1)/2 && (value > low_response); ++ky)
-                for (int kx = -w/2; kx < (w+1)/2 && (value > low_response); ++kx)
-                    if (im.getClamp(kx, ky, c) > value) {
+        for (int x = 0; x != im.w; ++x)
+        {
+            float value = im.getClamp(x, y, c);
+            for (int ky = -w; ky <= w && (value > low_response); ++ky)
+                for (int kx = -w; kx <= w && (value > low_response); ++kx)
+                    if (im.getClamp(x + kx, y + ky, c) > value)
+                    {
                         dst.set(x, y, c, low_response);
                         value = low_response;
                     }
-
-
         }
 }
 
@@ -111,9 +108,9 @@ void harrisStructureMatrix(Mat const &im, Mat &S, float sigma)
     int size = im.w * im.h;
 
     Mat I(im.w, im.h, 3);
-    Mat IxIx(im.w, im.h, 1, I.data + (0 * size));
-    Mat IyIy(im.w, im.h, 1, I.data + (1 * size));
-    Mat IxIy(im.w, im.h, 1, I.data + (2 * size));
+    Mat IxIx = I.channelView(0);
+    Mat IyIy = I.channelView(1);
+    Mat IxIy = I.channelView(2);
     gradient(im, IxIx, IyIy);
 
     float x, y;
@@ -128,13 +125,7 @@ void harrisStructureMatrix(Mat const &im, Mat &S, float sigma)
     }
 
     S.reshape(im.w, im.h, 3);
-    //smoothImage(I, S, 2.0f);
-    Mat Sxx(im.w, im.h, 1, S.data + (0 * size));
-    Mat Syy(im.w, im.h, 1, S.data + (1 * size));
-    Mat Sxy(im.w, im.h, 1, S.data + (2 * size));
-    smoothImage(IxIx, Sxx, sigma);
-    smoothImage(IyIy, Syy, sigma);
-    smoothImage(IxIy, Sxy, sigma);
+    smoothImage(I, S, 2.0f);
 }
 
 void harrisCornernessResponse(Mat const &s, Mat &R)
@@ -149,7 +140,6 @@ void harrisCornernessResponse(Mat const &s, Mat &R)
 
     R.reshape(s.w, s.h, 1);
     for(int i = 0; i != s.w * s.h; ++i) {
-
         const float xx = s.data[s.w * s.h * 0 + i];
         const float yy = s.data[s.w * s.h * 1 + i];
         const float xy = s.data[s.w * s.h * 2 + i];
@@ -172,23 +162,11 @@ Descriptors harrisCornerDetector(Mat const &im, float sigma, float thresh, int n
     // Estimate cornerness
     harrisCornernessResponse(S, R);
 
-    float m = -9999.0f;
-    for (int i = 0; i != R.w * R.h; ++i) {
-        if (R.data[i] > m) {
-            m = R.data[i];
-        }
-    }
-        std::cout << "max"  << m << std::endl;
-
     // Run NMS on the responses
-   // nonMaxSupression(R, S, nms);
-//    for (int i = 0; i != S.w * S.h; ++i) {
-//        if (S.data[i] > thresh) {
-//            d.push_back(describeIndex(S, i));
-//        }
-//    }
-
-
+    nonMaxSupression(R, S, nms);
+    for (int i = 0; i != S.w * S.h; ++i)
+        if (S.data[i] > thresh)
+            d.push_back(describeIndex(S, i));
 
     return d;
 }

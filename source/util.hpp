@@ -7,6 +7,7 @@ namespace vs
     std::string toNativeSeparators(std::string const& path);
 
     bool sameMat(Mat const &a, Mat const &b);
+    bool sameChannel(Mat const &a, Mat const &b, int const ac, int const bc);
 
     std::ostream &print(Mat const& m, std::ostream &out = std::cout, int max_cols = -1, int max_rows = -1);
 
