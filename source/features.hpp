@@ -29,6 +29,13 @@ struct Descriptor
 };
 using Descriptors = std::vector<Descriptor>;
 
+
+// Create a feature descriptor for an index in an image.
+// image im: source image.
+// int i: index in image for the pixel we want to describe.
+// returns: descriptor for that index.
+Descriptor describeIndex(Mat const&im, int i);
+
 // Marks the spot of a point in an image.
 // image im: image to mark.
 // point p: spot to mark in the image.

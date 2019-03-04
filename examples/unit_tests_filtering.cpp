@@ -136,6 +136,30 @@ void test_gaussian_blur() {
     blur = vs::smoothImage(im, 2.0f);
     blur.clamp();
     UTEST(vs::sameMat(blur, gt));
+
+
+    vs::Mat c0(im.w, im.h, 1);
+    c0.fill(im, 0, 0);
+
+    vs::Mat c1(im.w, im.h, 1);
+    c1.fill(im, 1, 0);
+
+    vs::Mat c2(im.w, im.h, 1);
+    c2.fill(im, 2, 0);
+
+    vs::Mat d(im.w, im.h, 3);
+    vs::Mat d0(im.w, im.h, 1, d.data + (0 * im.w * im.h));
+    vs::Mat d1(im.w, im.h, 1, d.data + (1 * im.w * im.h));
+    vs::Mat d2(im.w, im.h, 1, d.data + (2 * im.w * im.h));
+
+    vs::smoothImage(c0, d0, 2.0f);
+    vs::smoothImage(c1, d1, 2.0f);
+    vs::smoothImage(c2, d2, 2.0f);
+
+    vs::Mat D(im.w, im.h, 3);
+    vs::smoothImage(im, D, 2.0f);
+
+    UTEST(vs::sameMat(D, d));
 }
 
 void test_hybrid_image() {

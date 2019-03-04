@@ -11,5 +11,6 @@ int main(int argc, char **argv)
     //unit_tests_filtering(argc, argv);
     unit_tests_features(argc, argv);
     std::cout << "unit tests finished" << std::endl;
+
     return 0;
 }
