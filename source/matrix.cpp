@@ -47,7 +47,8 @@ Mat Mat::clone() const
     return output;
 }
 
-Mat Mat::channelView(int c, int count) {
+Mat Mat::channelView(int c, int count)
+{
     assert(this->c > (c + count - 1));
 
     Mat output(w, h, count, data + c * channelSize());
@@ -87,7 +88,7 @@ Mat &Mat::fill(Mat const &src, int src_c, int dst_c)
 
     for (int i = 0; i != w * h; ++i)
         data[dst_c * w * h + i] = src.data[src_c * w * h + i];
-    
+
     return *this;
 }
 
@@ -111,7 +112,6 @@ float Mat::getZero(int x, int y, int c) const
         return 0;
 
     return data[c * h * w + y * w + x];
-
 }
 
 Mat &Mat::set(int x, int y, int c, float v)
@@ -194,15 +194,16 @@ Mat &Mat::mult(float v)
     return *this;
 }
 
-Mat &Mat::transpose()
+Mat Mat::transpose()
 {
-    assert(false);
+    Mat t(h, w, c);
 
-}
+    for (int k = 0; k != t.c; ++k)
+        for (int y = 0; y != t.h; ++y)
+            for (int x = 0; x != t.w; ++x)
+                t.set(x, y, c, get(y, x, c));
 
-Mat Mat::transpose(const Mat &a)
-{
-   assert(false);
+    return t;
 }
 
 float Mat::sum(int c)
@@ -219,9 +220,11 @@ float Mat::max(int c)
 {
     float value = std::numeric_limits<float>::min();
 
-    for (int i = 0; i != w * h; ++i) {
+    for (int i = 0; i != w * h; ++i)
+    {
         float current = data[c * h * w + i];
-        if (current > value) {
+        if (current > value)
+        {
             value = current;
         }
     }
@@ -233,9 +236,11 @@ float Mat::min(int c)
 {
     float value = std::numeric_limits<float>::max();
 
-    for (int i = 0; i != w * h; ++i) {
+    for (int i = 0; i != w * h; ++i)
+    {
         float current = data[c * h * w + i];
-        if (current < value) {
+        if (current < value)
+        {
             value = current;
         }
     }
@@ -329,8 +334,9 @@ int Mat::size() const
     return w * h * c;
 }
 
-int Mat::channelSize() const {
-    return w * h;  
+int Mat::channelSize() const
+{
+    return w * h;
 }
 
 void Mat::reshape(int w, int h, int c)
@@ -379,10 +385,90 @@ Mat &Mat::setIdentity()
 {
     zero();
 
-    for(int i = 0; i < rows && i < cols; ++i)
+    for (int i = 0; i < rows && i < cols; ++i)
         m(i, i) = 1;
 
     return *this;
+}
+
+Mat Mat::augment()
+{
+    Mat c = make(rows, cols * 2);
+    for (int i = 0; i < rows; ++i)
+        for (int j = 0; j < cols; ++j)
+            c.m(i, j) = m(i, j);
+
+    for (int j = 0; j < rows; ++j)
+        c.m(j, j + cols) = 1;
+
+    return c;
+}
+
+Mat Mat::invert()
+{
+    Mat none;
+
+    // Matrix not square
+    if (rows != cols)
+        return none;
+
+    Mat c = augment();
+
+    for (int k = 0; k < c.rows; ++k)
+    {
+        float p = 0.0f;
+        int index = -1;
+        for (int i = k; i < c.rows; ++i)
+        {
+            float val = fabsf(c.m(i, k));
+            if (val > p)
+            {
+                p = val;
+                index = i;
+            }
+        }
+
+        // "Can't do it, sorry!
+        if (index == -1)
+            return none;
+
+        float swap;
+        for (int j = 0; j != c.cols; ++j)
+        {
+            swap = c.m(index, j);
+            c.m(index, j) = c.m(k, j);
+            c.m(k, j) = swap;
+        }
+
+        float val = c.m(k, k);
+        c.m(k, k) = 1;
+        for (int j = k + 1; j < c.cols; ++j)
+            c.m(k, j) /= val;
+
+        for (int i = k + 1; i < c.rows; ++i)
+        {
+            float s = -c.m(i, k);
+            c.m(i, k) = 0;
+            for (int j = k + 1; j < c.cols; ++j)
+                c.m(i, j) += s * c.m(k, j);
+        }
+    }
+
+    for (int k = c.rows - 1; k > 0; --k)
+        for (int i = 0; i < k; ++i)
+        {
+            float s = -c.m(i, k);
+            c.m(i, k) = 0;
+            for (int j = k + 1; j < c.cols; ++j)
+                c.m(i, j) += s * c.m(k, j);
+        }
+
+    Mat inv(cols, rows);
+    for (int i = 0; i < rows; ++i)
+        for (int j = 0; j < cols; ++j)
+            inv.m(i, j) = c.m(i, j + cols);
+
+    return inv;
 }
 
 Mat Mat::make(int rows, int cols)
@@ -398,32 +484,19 @@ Mat Mat::makeIdentity(int rows, int cols)
 
 Mat Mat::makeIdentity3x3()
 {
-    Mat H = make(3,3);
-    H.m(0,0) = 1;
-    H.m(1,1) = 1;
-    H.m(2,2) = 1;
+    Mat H = make(3, 3);
+    H.m(0, 0) = 1;
+    H.m(1, 1) = 1;
+    H.m(2, 2) = 1;
     return H;
 }
 
 Mat Mat::makeTranslation3x3(float dx, float dy)
 {
     Mat H = makeIdentity3x3();
-    H.m(0,2) = dx;
-    H.m(1,2) = dy;
+    H.m(0, 2) = dx;
+    H.m(1, 2) = dy;
     return H;
-}
-
-Mat Mat::augment(const Mat &a)
-{
-    Mat c = make(a.rows, a.cols*2);
-    for(int i = 0; i < a.rows; ++i)
-        for(int j = 0; j < a.cols; ++j)
-            c.m(i,j) = a.m(i,j);
-
-    for(int j = 0; j < a.rows; ++j)
-        c.m(j,j+a.cols) = 1;
-
-    return c;
 }
 
 void Mat::mmult(const Mat &a, const Mat &b, Mat &p)
@@ -431,13 +504,10 @@ void Mat::mmult(const Mat &a, const Mat &b, Mat &p)
     assert(a.cols == b.rows);
     p.reshape(a.cols, a.rows, 1);
 
-    for(int i = 0; i < p.rows; ++i){
-        for(int j = 0; j < p.cols; ++j){
-            for(int k = 0; k < a.cols; ++k){
-                p.m(i,j) += a.m(i,k)*b.m(k,j);
-            }
-        }
-    }
+    for (int i = 0; i < p.rows; ++i)
+        for (int j = 0; j < p.cols; ++j)
+            for (int k = 0; k < a.cols; ++k)
+                p.m(i, j) += a.m(i, k) * b.m(k, j);
 }
 
 Mat Mat::mmult(const Mat &a, const Mat &b)
@@ -447,5 +517,123 @@ Mat Mat::mmult(const Mat &a, const Mat &b)
     return p;
 }
 
+void Mat::vmult(const Mat &a, const Mat &b, Mat &p)
+{
+    assert(b.size() == a.cols);
+
+    p.reshape(a.rows, 1, 1);
+    p.zero();
+
+    for (int i = 0; i < a.rows; ++i)
+        for (int j = 0; j < a.cols; ++j)
+            p.data[i] += a.m(i, j) * b.data[j];
+}
+
+Mat Mat::vmult(const Mat &a, const Mat &b)
+{
+    Mat p;
+    vmult(a, b, p);
+    return p;
+}
+
+//
+// Sle solver
+//
+
+std::vector<int> in_place_LUP(Mat &m)
+{
+    std::vector<int> pivot(m.rows, 0);
+
+    // "Matrix not square
+    if (m.rows != m.cols)
+        return pivot;
+
+    for (int k = 0; k < m.rows; ++k)
+        pivot[k] = k;
+
+    for (int k = 0; k < m.rows; ++k)
+    {
+        float p = 0.0f;
+        int index = -1;
+        for (int i = k; i < m.rows; ++i)
+        {
+            float val = fabsf(m.m(i, k));
+            if (val > p)
+            {
+                p = val;
+                index = i;
+            }
+        }
+
+        //  Matrix is singular
+        if (index == -1)
+            return std::vector<int>();
+
+        int swapi = pivot[k];
+        pivot[k] = pivot[index];
+        pivot[index] = swapi;
+
+        float swap;
+        for (int j = 0; j != m.cols; ++j)
+        {
+            swap = m.m(index, j);
+            m.m(index, j) = m.m(k, j);
+            m.m(k, j) = swap;
+        }
+
+        for (int i = k + 1; i < m.rows; ++i)
+        {
+            m.m(i, k) = m.m(i, k) / m.m(k, k);
+            for (int j = k + 1; j < m.cols; ++j)
+                m.m(i, j) -= m.m(i, k) * m.m(k, j);
+        }
+    }
+    return pivot;
+}
+
+Mat LUP_solve(Mat const &L, Mat const U, std::vector<int> const &p, Mat const &b)
+{
+    int i, j;
+    Mat c(L.rows, 1);
+
+    for (i = 0; i < L.rows; ++i)
+    {
+        int pi = p[i];
+        c.data[i] = b.data[pi];
+        for (j = 0; j < i; ++j)
+            c.data[i] -= L.m(i, j) * c.data[j];
+    }
+
+    for (i = U.rows - 1; i >= 0; --i)
+    {
+        for (j = i + 1; j < U.cols; ++j)
+            c.data[i] -= U.m(i, j) * c.data[j];
+
+        c.data[i] /= U.m(i, i);
+    }
+    return c;
+}
+
+Mat Mat::sleSolve(Mat &A, Mat const &b)
+{
+    std::vector<int> p = in_place_LUP(A);
+    return LUP_solve(A, A, p, b);
+}
+
+Mat Mat::systemSolve(Mat& M, Mat const& b) {
+    
+    Mat none;
+    Mat Mt = M.transpose();
+    Mat MtM = Mat::mmult(Mt, M);
+    Mat MtMinv = MtM.invert();
+
+    if(MtMinv.size() == 0) 
+        return none;
+
+    Mat Mdag = Mat::mmult(MtMinv, Mt);
+    Mat a = Mat::mmult(Mdag, b);
+    
+    return a;
+}
 
 } // namespace vs

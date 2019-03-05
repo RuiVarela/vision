@@ -55,11 +55,8 @@ public:
   Mat &mult(int c, float v);
   Mat &mult(float v);
 
-
   // transpose
-  Mat &transpose();
-  static Mat transpose(Mat const& a);
-
+  Mat transpose();
   
   float sum(int c); // sums all values in a channel
   float max(int c); // max value in a channel
@@ -84,18 +81,27 @@ public:
 
   Mat &setIdentity();
 
+  Mat augment();
+  Mat invert();
+
   static Mat make(int rows, int cols);
   static Mat makeIdentity(int rows, int cols);
   static Mat makeIdentity3x3();
   static Mat makeTranslation3x3(float dx, float dy);
 
-  static Mat augment(const Mat &a);
-
-  // Matrix multiplication
+  // Matrix-Matrix multiplication
   // p = a * b
   static void mmult(const Mat &a, const Mat &b, Mat& p);
   static Mat mmult(const Mat &a, const Mat &b);
 
+  // Matrix-Vector multiplication
+  // vp = ma * vb
+  static void vmult(const Mat &a, const Mat &b, Mat& p);
+  static Mat vmult(const Mat &a, const Mat &b);
+
+  static Mat sleSolve(Mat& A, Mat const& b);
+
+  static Mat systemSolve(Mat& M, Mat const& b);
 
 
   int w;    // width
