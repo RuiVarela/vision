@@ -4,8 +4,23 @@ namespace vs
 {
 
 Mat::Mat()
-    : w(0), h(0), c(0), data(nullptr)
+    : w(0), h(0), c(0), data(nullptr), rows(h), cols(w)
 {
+}
+
+Mat::Mat(const Mat &rhs)
+    : w(rhs.w), h(rhs.h), c(rhs.c), data(rhs.data), rows(h), cols(w), shared_data(rhs.shared_data)
+{
+}
+
+Mat &Mat::operator=(const Mat &rhs)
+{
+    this->w = rhs.w;
+    this->h = rhs.h;
+    this->c = rhs.c;
+    this->data = rhs.data;
+    this->shared_data = rhs.shared_data;
+    return *this;
 }
 
 Mat::Mat(int w, int h, int c)
@@ -179,6 +194,17 @@ Mat &Mat::mult(float v)
     return *this;
 }
 
+Mat &Mat::transpose()
+{
+    assert(false);
+
+}
+
+Mat Mat::transpose(const Mat &a)
+{
+   assert(false);
+}
+
 float Mat::sum(int c)
 {
     float value = 0.0;
@@ -333,5 +359,93 @@ void Mat::reshape(int w, int h, int c)
         }
     }
 }
+
+//
+// Math Matrix Code
+// Rows,Cols
+//
+
+const float &Mat::m(const int row, const int col) const
+{
+    return data[row * w + col];
+}
+
+float &Mat::m(const int row, const int col)
+{
+    return data[row * w + col];
+}
+
+Mat &Mat::setIdentity()
+{
+    zero();
+
+    for(int i = 0; i < rows && i < cols; ++i)
+        m(i, i) = 1;
+
+    return *this;
+}
+
+Mat Mat::make(int rows, int cols)
+{
+    return Mat(cols, rows);
+}
+
+Mat Mat::makeIdentity(int rows, int cols)
+{
+    Mat mat = make(rows, cols);
+    return mat.setIdentity();
+}
+
+Mat Mat::makeIdentity3x3()
+{
+    Mat H = make(3,3);
+    H.m(0,0) = 1;
+    H.m(1,1) = 1;
+    H.m(2,2) = 1;
+    return H;
+}
+
+Mat Mat::makeTranslation3x3(float dx, float dy)
+{
+    Mat H = makeIdentity3x3();
+    H.m(0,2) = dx;
+    H.m(1,2) = dy;
+    return H;
+}
+
+Mat Mat::augment(const Mat &a)
+{
+    Mat c = make(a.rows, a.cols*2);
+    for(int i = 0; i < a.rows; ++i)
+        for(int j = 0; j < a.cols; ++j)
+            c.m(i,j) = a.m(i,j);
+
+    for(int j = 0; j < a.rows; ++j)
+        c.m(j,j+a.cols) = 1;
+
+    return c;
+}
+
+void Mat::mmult(const Mat &a, const Mat &b, Mat &p)
+{
+    assert(a.cols == b.rows);
+    p.reshape(a.cols, a.rows, 1);
+
+    for(int i = 0; i < p.rows; ++i){
+        for(int j = 0; j < p.cols; ++j){
+            for(int k = 0; k < a.cols; ++k){
+                p.m(i,j) += a.m(i,k)*b.m(k,j);
+            }
+        }
+    }
+}
+
+Mat Mat::mmult(const Mat &a, const Mat &b)
+{
+    Mat p;
+    mmult(a, b, p);
+    return p;
+}
+
 
 } // namespace vs

@@ -9,6 +9,9 @@ class Mat
 {
 public:
   Mat();
+  Mat(const Mat &rhs);
+  Mat &operator=(const Mat &rhs);
+
   explicit Mat(int w, int h = 1, int c = 1);
   explicit Mat(int w, int h, int c, float* ext); // external memory pointer
 
@@ -52,6 +55,11 @@ public:
   Mat &mult(int c, float v);
   Mat &mult(float v);
 
+
+  // transpose
+  Mat &transpose();
+  static Mat transpose(Mat const& a);
+
   
   float sum(int c); // sums all values in a channel
   float max(int c); // max value in a channel
@@ -66,10 +74,37 @@ public:
   Mat &featureNormalize(int c);
   Mat &featureNormalize();
 
-  int w;
-  int h;
-  int c;
+
+  //
+  // Math Matrix Code
+  // Rows,Cols
+  //
+  const float &m(int const row, int const col) const;
+  float& m(int const row, int const col);
+
+  Mat &setIdentity();
+
+  static Mat make(int rows, int cols);
+  static Mat makeIdentity(int rows, int cols);
+  static Mat makeIdentity3x3();
+  static Mat makeTranslation3x3(float dx, float dy);
+
+  static Mat augment(const Mat &a);
+
+  // Matrix multiplication
+  // p = a * b
+  static void mmult(const Mat &a, const Mat &b, Mat& p);
+  static Mat mmult(const Mat &a, const Mat &b);
+
+
+
+  int w;    // width
+  int h;    // height
+  int c;    // channels;
   float *data;
+
+  int& rows;
+  int& cols;
 
 private:
   std::shared_ptr<float> shared_data;
