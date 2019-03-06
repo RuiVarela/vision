@@ -27,9 +27,9 @@ matrix make_matrix(int rows, int cols)
     matrix m;
     m.rows = rows;
     m.cols = cols;
-    m.data = static_cast<double**>(calloc(m.rows, sizeof(double *)));
+    m.data = static_cast<double**>(calloc(size_t(m.rows), sizeof(double *)));
     int i;
-    for(i = 0; i < m.rows; ++i) m.data[i] = static_cast<double*>(calloc(m.cols, sizeof(double)));
+    for(i = 0; i < m.rows; ++i) m.data[i] = static_cast<double*>(calloc(size_t(m.cols), sizeof(double)));
     return m;
 }
 
@@ -45,8 +45,8 @@ matrix make_identity_homography()
 matrix make_translation_homography(float dx, float dy)
 {
     matrix H = make_identity_homography();
-    H.data[0][2] = dx;
-    H.data[1][2] = dy;
+    H.data[0][2] = double(dx);
+    H.data[1][2] = double(dy);
     return H;
 }
 
@@ -129,10 +129,10 @@ matrix transpose_matrix(matrix m)
     matrix t;
     t.rows = m.cols;
     t.cols = m.rows;
-    t.data = static_cast<double**>(calloc(t.rows, sizeof(double *)));
+    t.data = static_cast<double**>(calloc(size_t(t.rows), sizeof(double *)));
     int i, j;
     for(i = 0; i < t.rows; ++i){
-        t.data[i] = static_cast<double*>(calloc(t.cols, sizeof(double)));
+        t.data[i] = static_cast<double*>(calloc(size_t(t.cols), sizeof(double)));
         for(j = 0; j < t.cols; ++j){
             t.data[i][j] = m.data[j][i];
         }
@@ -152,7 +152,7 @@ void scale_matrix(matrix m, double s)
 
 double *matrix_mult_vector(matrix m, double *v)
 {
-    double *p = static_cast<double*>(calloc(m.rows, sizeof(double)));
+    double *p = static_cast<double*>(calloc(size_t(m.rows), sizeof(double)));
     int i, j;
     for(i = 0; i < m.rows; ++i){
         for(j = 0; j < m.cols; ++j){
@@ -162,33 +162,10 @@ double *matrix_mult_vector(matrix m, double *v)
     return p;
 }
 
-void print_matrix(matrix m)
-{
-    int i, j;
-    printf(" __");
-    for(j = 0; j < 16*m.cols-1; ++j) printf(" ");
-    printf("__ \n");
-
-    printf("|  ");
-    for(j = 0; j < 16*m.cols-1; ++j) printf(" ");
-    printf("  |\n");
-
-    for(i = 0; i < m.rows; ++i){
-        printf("|  ");
-        for(j = 0; j < m.cols; ++j){
-            printf("%15.7f ", m.data[i][j]);
-        }
-        printf(" |\n");
-    }
-    printf("|__");
-    for(j = 0; j < 16*m.cols-1; ++j) printf(" ");
-    printf("__|\n");
-}
-
 double *LUP_solve(matrix L, matrix U, int *p, double *b)
 {
     int i, j;
-    double *c = static_cast<double*>(calloc(L.rows, sizeof (double)));
+    double *c = static_cast<double*>(calloc(size_t(L.rows), sizeof (double)));
     for(i = 0; i < L.rows; ++i){
         int pi = p[i];
         c[i] = b[pi];
@@ -208,7 +185,7 @@ double *LUP_solve(matrix L, matrix U, int *p, double *b)
 matrix matrix_invert(matrix m)
 {
     //print_matrix(m);
-    matrix none = {0};
+    matrix none = {0,0,nullptr};
     if(m.rows != m.cols){
         fprintf(stderr, "Matrix not square\n");
         return none;
@@ -243,7 +220,7 @@ matrix matrix_invert(matrix m)
             c.data[k][j] /= val;
         }
         for(i = k+1; i < c.rows; ++i){
-            float s = -c.data[i][k];
+            double s = -c.data[i][k];
             c.data[i][k] = 0;
             for(j = k+1; j < c.cols; ++j){
                 c.data[i][j] +=  s*c.data[k][j];
@@ -273,7 +250,7 @@ matrix matrix_invert(matrix m)
 
 int* in_place_LUP(matrix m)
 {
-    int *pivot = static_cast<int*>(calloc(m.rows, sizeof(int)));
+    int *pivot = static_cast<int*>(calloc(size_t(m.rows), sizeof(int)));
     if(m.rows != m.cols){
         fprintf(stderr, "Matrix not square\n");
         return 0;
@@ -314,17 +291,6 @@ int* in_place_LUP(matrix m)
     return pivot;
 }
 
-matrix random_matrix(int rows, int cols)
-{
-    matrix m = make_matrix(rows, cols);
-    int i, j;
-    for(i = 0; i < rows; ++i){
-        for(j = 0; j < cols; ++j){
-            m.data[i][j] = rand()%100 - 50;
-        }
-    }
-    return m;
-}
 
 double *sle_solve(matrix A, double *b)
 {
@@ -334,7 +300,7 @@ double *sle_solve(matrix A, double *b)
 
 matrix solve_system(matrix M, matrix b)
 {
-    matrix none = {0};
+    matrix none = {0,0,nullptr};
     matrix Mt = transpose_matrix(M);
     matrix MtM = matrix_mult_matrix(Mt, M);
     matrix MtMinv = matrix_invert(MtM);
@@ -345,17 +311,7 @@ matrix solve_system(matrix M, matrix b)
     return a;
 }
 
-void test_matrix()
-{
-    int i;
-    for(i = 0; i < 100; ++i){
-        int s = rand()%4 + 3;
-        matrix m = random_matrix(s, s);
-        matrix inv = matrix_invert(m);
-        matrix res = matrix_mult_matrix(m, inv);
-        print_matrix(res);
-    }
-}
+
 
 //
 // Test Start
@@ -373,18 +329,6 @@ bool same(const vs::Mat &a, const matrix &b)
 {
     float const epsilon = 0.005f;
 
-    if (a.cols != a.w)
-    {
-        printf("(a.cols != a.w) %d x %d\n", a.cols, a.w);
-        return false;
-    }
-
-    if (a.rows != a.h)
-    {
-        printf("(a.rows != a.h) %d x %d\n", a.rows, a.h);
-        return false;
-    }
-
     if (a.w != b.cols || a.h != b.rows || a.c != 1)
     {
         printf("Expected %d x %d x %d image, got %d x %d x %d\n", b.cols, b.rows, 1, a.w, a.h, a.c);
@@ -395,7 +339,7 @@ bool same(const vs::Mat &a, const matrix &b)
         for (int x = 0; x < a.w; ++x)
             if (!vs::equivalent(a.m(y, x), float(b.data[y][x]), epsilon))
             {
-                printf("Mismatch (%d %d) %f %f\n", x, y, a.m(y, x), float(b.data[y][x]));
+                printf("Mismatch (%d %d) %f %f\n", x, y, double(a.m(y, x)), b.data[y][x]);
                 return false;
             }
 
@@ -404,12 +348,12 @@ bool same(const vs::Mat &a, const matrix &b)
 }
 
 void randomize(vs::Mat& a, matrix& b, int rows, int cols) {
-    a = vs::Mat::make(rows, cols);
+    a = vs::Mat(cols, rows);
     b = make_matrix(rows, cols);
 
     for(int i = 0; i < rows; ++i){
         for(int j = 0; j < cols; ++j){
-            float value = rand() % 100 - 50;
+            float value = float(rand() % 100 - 50);
             b.data[i][j] = double(value);
             a.m(i,j) = value;
         }
@@ -418,20 +362,48 @@ void randomize(vs::Mat& a, matrix& b, int rows, int cols) {
 
 
 void test_basics() {
-    UTEST(same(vs::Mat::makeIdentity(4, 3), make_identity(4, 3)));
-    UTEST(same(vs::Mat::makeIdentity(2, 3), make_identity(2, 3)));
-    UTEST(same(vs::Mat::makeIdentity(1, 3), make_identity(1, 3)));
-    UTEST(same(vs::Mat::makeIdentity(3, 3), make_identity(3, 3)));
-    UTEST(same(vs::Mat::makeIdentity(2, 2), make_identity(2, 2)));
-    UTEST(same(vs::Mat::makeIdentity3x3(), make_identity_homography()));
-    UTEST(same(vs::Mat::makeTranslation3x3(30.0f, 20.0f), make_translation_homography(30.0f, 20.0f)));
-    UTEST(same(vs::Mat::makeTranslation3x3(120.0f, 40.0f), make_translation_homography(120.0f, 40.0f)));
+
+    matrix t = make_identity(4, 3);
+    UTEST(same(vs::Mat::makeIdentity(4, 3), t));
+    free_matrix(t);
+
+    t = make_identity(2, 3);
+    UTEST(same(vs::Mat::makeIdentity(2, 3), t));
+    free_matrix(t);
+
+    t = make_identity(1, 3);
+    UTEST(same(vs::Mat::makeIdentity(1, 3), t));
+    free_matrix(t);
+
+    t = make_identity(3, 3);
+    UTEST(same(vs::Mat::makeIdentity(3, 3), t));
+    free_matrix(t);
+
+    t = make_identity(2, 2);
+    UTEST(same(vs::Mat::makeIdentity(2, 2), t));
+    free_matrix(t);
+
+    t = make_identity_homography();
+    UTEST(same(vs::Mat::makeIdentity3x3(), t));
+    free_matrix(t);
+
+    t = make_translation_homography(30.0f, 20.0f);
+    UTEST(same(vs::Mat::makeTranslation3x3(30.0f, 20.0f), t));
+    free_matrix(t);
+
+    t =  make_translation_homography(120.0f, 40.0f);
+    UTEST(same(vs::Mat::makeTranslation3x3(120.0f, 40.0f), t));
+    free_matrix(t);
+
 
     for (int i = 0; i != 10; ++i) {
         vs::Mat a;
         matrix b;
         randomize(a, b, 10, 10);
-        UTEST(same(vs::Mat::augment(a), augment_matrix(b)));
+
+        matrix m = augment_matrix(b);
+        UTEST(same(a.augment(), m));
+        free_matrix(m);
     }
 
 
@@ -443,8 +415,15 @@ void test_basics() {
         vs::Mat b;
         matrix b1;
         randomize(b, b1, 10, 10);
-        UTEST(same(vs::Mat::mmult(a, b), matrix_mult_matrix(a1, b1)));
+
+        matrix m = matrix_mult_matrix(a1, b1);
+        UTEST(same(vs::Mat::mmult(a, b), m));
+
+        free_matrix(m);
+        free_matrix(a1);
+        free_matrix(b1);
     }
+
 
     for (int i = 0; i != 10; ++i) {
         vs::Mat a;
@@ -454,14 +433,105 @@ void test_basics() {
         vs::Mat b;
         matrix b1;
         randomize(b, b1, 10, 10);
+
+        matrix m = matrix_sub_matrix(a1, b1);
         UTEST(same(vs::Mat::sub(a, b), matrix_sub_matrix(a1, b1)));
+
+        free_matrix(m);
+        free_matrix(a1);
+        free_matrix(b1);
+    }
+
+
+    for (int i = 0; i != 10; ++i) {
+        vs::Mat a;
+        matrix a1;
+        randomize(a, a1, 10, 10);
+
+        vs::Mat b;
+        matrix b1;
+        randomize(b, b1, 10, 10);
+
+        matrix m = matrix_mult_matrix(a1, b1);
+        UTEST(same(vs::Mat::mmult(a, b), matrix_mult_matrix(a1, b1)));
+
+        free_matrix(m);
+        free_matrix(a1);
+        free_matrix(b1);
+    }
+
+
+    for (int i = 0; i != 10; ++i) {
+        vs::Mat a;
+        matrix a1;
+        randomize(a, a1, 3, 3);
+
+        matrix m = transpose_matrix(a1);
+        UTEST(same(a.transpose(), m));
+        free_matrix(m);
+        free_matrix(a1);
+
+        randomize(a, a1, 3, 2);
+        m = transpose_matrix(a1);
+        UTEST(same(a.transpose(), m));
+        free_matrix(m);
+        free_matrix(a1);
+
+        randomize(a, a1, 2, 3);
+        m = transpose_matrix(a1);
+        UTEST(same(a.transpose(), m));
+        free_matrix(m);
+        free_matrix(a1);
+    }
+
+
+    for (int i = 0; i != 10; ++i) {
+        vs::Mat a;
+        matrix a1;
+        randomize(a, a1, 3, 3);
+
+        vs::Mat v;
+        matrix v1;
+        randomize(v, v1, 1, 3);
+
+        double *p = matrix_mult_vector(a1, v1.data[0]);
+        memcpy(v1.data[0], p, size_t(v1.cols) * sizeof (double));
+        free(p);
+
+        UTEST(same(vs::Mat::vmult(a, v), v1));
+
+        free_matrix(v1);
+        free_matrix(a1);
     }
 }
 
+void test_invert() {
+    for(int i = 0; i < 100; ++i){
+        int s = rand() % 4 + 3;
+
+        vs::Mat m;
+        matrix m1;
+        randomize(m, m1, s, s);
+
+
+        vs::Mat inv = m.invert();
+        matrix inv1 = matrix_invert(m1);
+        UTEST(same(inv, inv1));
+
+        vs::Mat res = vs::Mat::mmult(m, inv);
+        matrix res1 = matrix_mult_matrix(m1, inv1);
+        UTEST(same(res, res1));
+
+        free_matrix(m1);
+        free_matrix(inv1);
+        free_matrix(res1);
+    }
+}
 
 int unit_tests_matrix(int argc, char **argv)
 {
     test_basics();
+    test_invert();
 
     return 0;
 }

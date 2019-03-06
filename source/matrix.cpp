@@ -4,23 +4,8 @@ namespace vs
 {
 
 Mat::Mat()
-    : w(0), h(0), c(0), data(nullptr), rows(h), cols(w)
+    : w(0), h(0), c(0), data(nullptr)
 {
-}
-
-Mat::Mat(const Mat &rhs)
-    : w(rhs.w), h(rhs.h), c(rhs.c), data(rhs.data), rows(h), cols(w), shared_data(rhs.shared_data)
-{
-}
-
-Mat &Mat::operator=(const Mat &rhs)
-{
-    this->w = rhs.w;
-    this->h = rhs.h;
-    this->c = rhs.c;
-    this->data = rhs.data;
-    this->shared_data = rhs.shared_data;
-    return *this;
 }
 
 Mat::Mat(int w, int h, int c)
@@ -201,7 +186,7 @@ Mat Mat::transpose()
     for (int k = 0; k != t.c; ++k)
         for (int y = 0; y != t.h; ++y)
             for (int x = 0; x != t.w; ++x)
-                t.set(x, y, c, get(y, x, c));
+                t.set(x, y, k, get(y, x, k));
 
     return t;
 }
@@ -381,11 +366,21 @@ float &Mat::m(const int row, const int col)
     return data[row * w + col];
 }
 
+const float &Mat::operator()(const int row, const int col) const
+{
+    return m(row, col);
+}
+
+float &Mat::operator()(const int row, const int col)
+{
+    return m(row, col);
+}
+
 Mat &Mat::setIdentity()
 {
     zero();
 
-    for (int i = 0; i < rows && i < cols; ++i)
+    for (int i = 0; i < h && i < w; ++i)
         m(i, i) = 1;
 
     return *this;
@@ -393,13 +388,13 @@ Mat &Mat::setIdentity()
 
 Mat Mat::augment()
 {
-    Mat c = make(rows, cols * 2);
-    for (int i = 0; i < rows; ++i)
-        for (int j = 0; j < cols; ++j)
+    Mat c(w * 2, h);
+    for (int i = 0; i < h; ++i)
+        for (int j = 0; j < w; ++j)
             c.m(i, j) = m(i, j);
 
-    for (int j = 0; j < rows; ++j)
-        c.m(j, j + cols) = 1;
+    for (int j = 0; j < h; ++j)
+        c.m(j, j + w) = 1;
 
     return c;
 }
@@ -409,16 +404,16 @@ Mat Mat::invert()
     Mat none;
 
     // Matrix not square
-    if (rows != cols)
+    if (h != w)
         return none;
 
     Mat c = augment();
 
-    for (int k = 0; k < c.rows; ++k)
+    for (int k = 0; k < c.h; ++k)
     {
         float p = 0.0f;
         int index = -1;
-        for (int i = k; i < c.rows; ++i)
+        for (int i = k; i < c.h; ++i)
         {
             float val = fabsf(c.m(i, k));
             if (val > p)
@@ -433,7 +428,7 @@ Mat Mat::invert()
             return none;
 
         float swap;
-        for (int j = 0; j != c.cols; ++j)
+        for (int j = 0; j != c.w; ++j)
         {
             swap = c.m(index, j);
             c.m(index, j) = c.m(k, j);
@@ -442,49 +437,44 @@ Mat Mat::invert()
 
         float val = c.m(k, k);
         c.m(k, k) = 1;
-        for (int j = k + 1; j < c.cols; ++j)
+        for (int j = k + 1; j < c.w; ++j)
             c.m(k, j) /= val;
 
-        for (int i = k + 1; i < c.rows; ++i)
+        for (int i = k + 1; i < c.h; ++i)
         {
             float s = -c.m(i, k);
             c.m(i, k) = 0;
-            for (int j = k + 1; j < c.cols; ++j)
+            for (int j = k + 1; j < c.w; ++j)
                 c.m(i, j) += s * c.m(k, j);
         }
     }
 
-    for (int k = c.rows - 1; k > 0; --k)
+    for (int k = c.h - 1; k > 0; --k)
         for (int i = 0; i < k; ++i)
         {
             float s = -c.m(i, k);
             c.m(i, k) = 0;
-            for (int j = k + 1; j < c.cols; ++j)
+            for (int j = k + 1; j < c.w; ++j)
                 c.m(i, j) += s * c.m(k, j);
         }
 
-    Mat inv(cols, rows);
-    for (int i = 0; i < rows; ++i)
-        for (int j = 0; j < cols; ++j)
-            inv.m(i, j) = c.m(i, j + cols);
+    Mat inv(w, h);
+    for (int i = 0; i < h; ++i)
+        for (int j = 0; j < w; ++j)
+            inv.m(i, j) = c.m(i, j + w);
 
     return inv;
 }
 
-Mat Mat::make(int rows, int cols)
-{
-    return Mat(cols, rows);
-}
-
 Mat Mat::makeIdentity(int rows, int cols)
 {
-    Mat mat = make(rows, cols);
+    Mat mat(cols, rows);
     return mat.setIdentity();
 }
 
 Mat Mat::makeIdentity3x3()
 {
-    Mat H = make(3, 3);
+    Mat H(3, 3);
     H.m(0, 0) = 1;
     H.m(1, 1) = 1;
     H.m(2, 2) = 1;
@@ -501,12 +491,12 @@ Mat Mat::makeTranslation3x3(float dx, float dy)
 
 void Mat::mmult(const Mat &a, const Mat &b, Mat &p)
 {
-    assert(a.cols == b.rows);
-    p.reshape(a.cols, a.rows, 1);
+    assert(a.w == b.h);
+    p.reshape(a.w, a.h, 1);
 
-    for (int i = 0; i < p.rows; ++i)
-        for (int j = 0; j < p.cols; ++j)
-            for (int k = 0; k < a.cols; ++k)
+    for (int i = 0; i < p.h; ++i)
+        for (int j = 0; j < p.w; ++j)
+            for (int k = 0; k < a.w; ++k)
                 p.m(i, j) += a.m(i, k) * b.m(k, j);
 }
 
@@ -519,14 +509,14 @@ Mat Mat::mmult(const Mat &a, const Mat &b)
 
 void Mat::vmult(const Mat &a, const Mat &b, Mat &p)
 {
-    assert(b.size() == a.cols);
+    assert(b.size() == a.w);
 
-    p.reshape(a.rows, 1, 1);
+    p.reshape(a.h, 1, 1);
     p.zero();
 
-    for (int i = 0; i < a.rows; ++i)
-        for (int j = 0; j < a.cols; ++j)
-            p.data[i] += a.m(i, j) * b.data[j];
+    for (int i = 0; i < a.h; ++i)
+        for (int j = 0; j < a.w; ++j)
+            p.data[i] += a(i, j) * b.data[j];
 }
 
 Mat Mat::vmult(const Mat &a, const Mat &b)
@@ -542,20 +532,20 @@ Mat Mat::vmult(const Mat &a, const Mat &b)
 
 std::vector<int> in_place_LUP(Mat &m)
 {
-    std::vector<int> pivot(m.rows, 0);
+    std::vector<int> pivot(uint32_t(m.h), 0);
 
     // "Matrix not square
-    if (m.rows != m.cols)
+    if (m.h != m.w)
         return pivot;
 
-    for (int k = 0; k < m.rows; ++k)
-        pivot[k] = k;
+    for (int k = 0; k < m.h; ++k)
+        pivot[uint32_t(k)] = k;
 
-    for (int k = 0; k < m.rows; ++k)
+    for (int k = 0; k < m.h; ++k)
     {
         float p = 0.0f;
         int index = -1;
-        for (int i = k; i < m.rows; ++i)
+        for (int i = k; i < m.h; ++i)
         {
             float val = fabsf(m.m(i, k));
             if (val > p)
@@ -569,22 +559,22 @@ std::vector<int> in_place_LUP(Mat &m)
         if (index == -1)
             return std::vector<int>();
 
-        int swapi = pivot[k];
-        pivot[k] = pivot[index];
-        pivot[index] = swapi;
+        int swapi = pivot[uint32_t(k)];
+        pivot[uint32_t(k)] = pivot[uint32_t(index)];
+        pivot[uint32_t(index)] = swapi;
 
         float swap;
-        for (int j = 0; j != m.cols; ++j)
+        for (int j = 0; j != m.w; ++j)
         {
             swap = m.m(index, j);
             m.m(index, j) = m.m(k, j);
             m.m(k, j) = swap;
         }
 
-        for (int i = k + 1; i < m.rows; ++i)
+        for (int i = k + 1; i < m.h; ++i)
         {
             m.m(i, k) = m.m(i, k) / m.m(k, k);
-            for (int j = k + 1; j < m.cols; ++j)
+            for (int j = k + 1; j < m.w; ++j)
                 m.m(i, j) -= m.m(i, k) * m.m(k, j);
         }
     }
@@ -593,20 +583,19 @@ std::vector<int> in_place_LUP(Mat &m)
 
 Mat LUP_solve(Mat const &L, Mat const U, std::vector<int> const &p, Mat const &b)
 {
-    int i, j;
-    Mat c(L.rows, 1);
+    Mat c(L.h, 1);
 
-    for (i = 0; i < L.rows; ++i)
+    for (int i = 0; i < L.h; ++i)
     {
-        int pi = p[i];
+        int pi = p[uint32_t(i)];
         c.data[i] = b.data[pi];
-        for (j = 0; j < i; ++j)
+        for (int j = 0; j < i; ++j)
             c.data[i] -= L.m(i, j) * c.data[j];
     }
 
-    for (i = U.rows - 1; i >= 0; --i)
+    for (int i = U.h - 1; i >= 0; --i)
     {
-        for (j = i + 1; j < U.cols; ++j)
+        for (int j = i + 1; j < U.w; ++j)
             c.data[i] -= U.m(i, j) * c.data[j];
 
         c.data[i] /= U.m(i, i);

@@ -9,9 +9,6 @@ class Mat
 {
 public:
   Mat();
-  Mat(const Mat &rhs);
-  Mat &operator=(const Mat &rhs);
-
   explicit Mat(int w, int h = 1, int c = 1);
   explicit Mat(int w, int h, int c, float* ext); // external memory pointer
 
@@ -30,6 +27,7 @@ public:
   Mat &fill(float v); // fills all channels with v value
   Mat &fill(Mat const& src, int src_c, int dst_c); // fills a channel with values from another mat
 
+  // channel values get/set
   float get(int x, int y = 0, int c = 0) const;
   float getClamp(int x, int y, int c) const;
   float getZero(int x, int y, int c) const;
@@ -63,7 +61,6 @@ public:
   float min(int c); // min value in a channel
   void minNmax(int c, float& minv, float& maxv); // min and max value in a channel
 
-
   // normalizes a channels using l1norm
   Mat &l1Normalize(int c);
   Mat &l1Normalize();
@@ -79,12 +76,16 @@ public:
   const float &m(int const row, int const col) const;
   float& m(int const row, int const col);
 
+  // same as m(r, c)
+  const float &operator()(int const row, int const col) const;
+  float &operator()(int const row, int const col);
+
+
   Mat &setIdentity();
 
   Mat augment();
   Mat invert();
 
-  static Mat make(int rows, int cols);
   static Mat makeIdentity(int rows, int cols);
   static Mat makeIdentity3x3();
   static Mat makeTranslation3x3(float dx, float dy);
@@ -100,7 +101,6 @@ public:
   static Mat vmult(const Mat &a, const Mat &b);
 
   static Mat sleSolve(Mat& A, Mat const& b);
-
   static Mat systemSolve(Mat& M, Mat const& b);
 
 
@@ -108,10 +108,6 @@ public:
   int h;    // height
   int c;    // channels;
   float *data;
-
-  int& rows;
-  int& cols;
-
 private:
   std::shared_ptr<float> shared_data;
 };

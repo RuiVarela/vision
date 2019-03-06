@@ -3,6 +3,12 @@
 namespace vs
 {
 
+float Point::distance(const Point &p, const Point &q)
+{
+    // TODO: should be a quick one.
+       return 0;
+}
+
 void Descriptor::reshape(int size)
 {
     if (n == size)
@@ -25,13 +31,83 @@ void Descriptor::reshape(int size)
     }
 }
 
+float Descriptor::l1Distance(float *a, float *b, int n)
+{
+    // TODO: return the correct number.
+    return 0;
+}
+
+int matchCompare(Match &a, Match &b)
+{
+    if (a.distance < b.distance) return -1;
+    else if (a.distance > b.distance) return  1;
+    else return 0;
+}
+
+Matches matchDescriptors(const Descriptors &a, const Descriptors &b)
+{
+    Matches output;
+
+    int i,j;
+
+    // We will have at most an matches.
+    for(size_t j = 0; j < a.size(); ++j){
+        // TODO: for every descriptor in a, find best match in b.
+        // record ai as the index in *a and bi as the index in *b.
+        int bind = 0; // <- find the best match
+
+        Match m;
+        m.ai = j;
+        m.bi = bind; // <- should be index in b.
+        m.p = a[j].p;
+        m.q = b[bind].p;
+        m.distance = 0; // <- should be the smallest L1 distance!
+
+        output.push_back(m);
+    }
+
+    int count = 0;
+    int *seen = (int*)calloc(b.size(), sizeof(int));
+    // TODO: we want matches to be injective (one-to-one).
+    // Sort matches based on distance using match_compare and qsort.
+    // Then throw out matches to the same element in b. Use seen to keep track.
+    // Each point should only be a part of one match.
+    // Some points will not be in a match.
+    // In practice just bring good matches to front of list, set *mn.
+    //*mn = count;
+    free(seen);
+
+
+    return output;
+}
+
+
+Point projectPoint(const Mat &H, const Point &p)
+{
+    Mat c(1, 3);
+    // TODO: project point p with homography H.
+    // Remember that homogeneous coordinates are equivalent up to scalar.
+    // Have to divide by.... something...
+    Point q(0, 0);
+    return q;
+}
+
+int modelInliers(const Mat &H, Matches &m, float thresh)
+{
+    int i;
+       int count = 0;
+       // TODO: count number of matches that are inliers
+       // i.e. distance(H*p, q) < thresh
+       // Also, sort the matches m so the inliers are the first 'count' elements.
+       return count;
+}
 
 Descriptor describeIndex(Mat const&im, int i)
 {
     int w = 5;
     Descriptor d;
-    d.p.x = i % im.w;
-    d.p.y = i / im.w;
+    d.p.x = float(i % im.w);
+    d.p.y = float(i / im.w);
     d.reshape(w*w*im.c);
 
     int count = 0;
@@ -48,30 +124,6 @@ Descriptor describeIndex(Mat const&im, int i)
         }
     }
     return d;
-
-}
-
-void markSpot(Mat &im, Point const &p)
-{
-    int x = p.x;
-    int y = p.y;
-    for (int i = -9; i < 10; ++i)
-    {
-        im.set(x + i, y, 0, 1);
-        im.set(x, y + i, 0, 1);
-        im.set(x + i, y, 1, 0);
-        im.set(x, y + i, 1, 0);
-        im.set(x + i, y, 2, 1);
-        im.set(x, y + i, 2, 1);
-    }
-}
-
-void markCorners(Mat &im, Descriptors const &d)
-{
-    for (size_t i = 0; i < d.size(); ++i)
-    {
-        markSpot(im, d[i].p);
-    }
 }
 
 void nonMaxSupression(Mat const &im, Mat &dst, int w)
@@ -125,7 +177,7 @@ void harrisStructureMatrix(Mat const &im, Mat &S, float sigma)
     }
 
     S.reshape(im.w, im.h, 3);
-    smoothImage(I, S, 2.0f);
+    smoothImage(I, S, sigma);
 }
 
 void harrisCornernessResponse(Mat const &s, Mat &R)
@@ -171,10 +223,9 @@ Descriptors harrisCornerDetector(Mat const &im, float sigma, float thresh, int n
     return d;
 }
 
-void detectAndDrawHarrisCorners(Mat &im, float const sigma, float const thresh, int const nms)
-{
-    Descriptors d = harrisCornerDetector(im, sigma, thresh, nms);
-    markCorners(im, d);
-}
+
+
+
+
 
 } // namespace vs

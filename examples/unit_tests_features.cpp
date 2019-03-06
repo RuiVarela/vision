@@ -68,7 +68,7 @@ void test_draw_harris() {
     harrisStructureMatrix(im, S, 2.0f);
     UTEST(S.w == im.w && S.h == im.h && S.c == 3);
 
-    vs::detectAndDrawHarrisCorners(im, 2.0f, 50.0f, 3);
+    vs::drawHarrisCorners(im, 2.0f, 50.0f, 3);
     //vs::saveImage("harris_corners.png", im);
 
     vs::Mat result = vs::loadImage("test/harris_corners.png");
