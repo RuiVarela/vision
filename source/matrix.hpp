@@ -32,6 +32,7 @@ public:
   float getClamp(int x, int y, int c) const;
   float getZero(int x, int y, int c) const;
   Mat &set(int x, int y, int c, float v);
+  Mat &setClamp(int x, int y, int c, float v);
 
   // clamp all values between [min, max]
   Mat &clamp(int c, float min, float max);
@@ -54,7 +55,7 @@ public:
   Mat &mult(float v);
 
   // transpose
-  Mat transpose();
+  Mat transpose() const;
   
   float sum(int c); // sums all values in a channel
   float max(int c); // max value in a channel
@@ -83,8 +84,8 @@ public:
 
   Mat &setIdentity();
 
-  Mat augment();
-  Mat invert();
+  Mat augment() const;
+  Mat invert() const;
 
   static Mat makeIdentity(int rows, int cols);
   static Mat makeIdentity3x3();
@@ -100,6 +101,7 @@ public:
   static void vmult(const Mat &a, const Mat &b, Mat& p);
   static Mat vmult(const Mat &a, const Mat &b);
 
+  // system of linear equations
   static Mat sleSolve(Mat& A, Mat const& b);
   static Mat systemSolve(Mat& M, Mat const& b);
 

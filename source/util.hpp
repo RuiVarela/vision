@@ -6,6 +6,11 @@ namespace vs
 {
     std::string toNativeSeparators(std::string const& path);
 
+    bool findArg(int argc, char* argv[], std::string arg);
+    int findArgInt(int argc, char **argv, std::string arg, int def);
+    float findArgFloat(int argc, char **argv, std::string arg, float def);
+    std::string findArgStr(int argc, char **argv, std::string arg, std::string def);
+
     bool sameMat(Mat const &a, Mat const &b);
     bool sameChannel(Mat const &a, Mat const &b, int const ac, int const bc);
 

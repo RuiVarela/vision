@@ -73,20 +73,35 @@ Matches matchDescriptors(Descriptors const& a, Descriptors const& b);
 // Count number of inliers in a set of matches. Should also bring inliers to the front of the array.
 // matrix H: homography between coordinate systems.
 // match *m: matches to compute inlier/outlier.
-// int n: number of matches in m.
 // float thresh: threshold to be an inlier.
 // returns: number of inliers whose projected point falls within thresh of
 //          their match in the other image. Should also rearrange matches
 //          so that the inliers are first in the array. For drawing.
 int modelInliers(Mat const& H, Matches& m, float thresh);
 
+// Randomly shuffle matches for RANSAC.
+// Fisher-Yate
+// match *m: matches to shuffle in place.
+void randomizeMatches(Matches& m);
+
+// Computes homography between two images given matching pixels.
+// match *matches: matching points between images.
+// returns: matrix representing homography H that maps image a to image b.
+Mat computeHomography(Matches const& matches);
+
+// Perform RANdom SAmple Consensus to calculate homography for noisy matches.
+// match *m: set of matches.
+// float thresh: inlier/outlier distance threshold.
+// int k: number of iterations to run.
+// int cutoff: inlier cutoff to exit early.
+// returns: matrix representing most common homography between matches.
+Mat RANSAC(Matches& m, float thresh, int k, int cutoff);
 
 // Apply a projective transformation to a point.
 // matrix H: homography to project point.
 // point p: point to project.
 // returns: point projected using the homography.
 Point projectPoint(Mat const& H, Point const& p);
-
 
 // Create a feature descriptor for an index in an image.
 // very simple descriptior : its just a patch of neighbors pixels with the central one subtracted

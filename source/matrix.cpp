@@ -109,6 +109,15 @@ Mat &Mat::set(int x, int y, int c, float v)
     return *this;
 }
 
+Mat &Mat::setClamp(int x, int y, int c, float v)
+{
+    x = vs::clampTo(x, 0, this->w - 1);
+    y = vs::clampTo(y, 0, this->h - 1);
+    c = vs::clampTo(c, 0, this->c - 1);
+    data[c * h * w + y * w + x] = v;
+    return *this;
+}
+
 Mat &Mat::add(int c, float v)
 {
     assert(c >= 0 && c < this->c);
@@ -179,7 +188,7 @@ Mat &Mat::mult(float v)
     return *this;
 }
 
-Mat Mat::transpose()
+Mat Mat::transpose() const
 {
     Mat t(h, w, c);
 
@@ -386,7 +395,7 @@ Mat &Mat::setIdentity()
     return *this;
 }
 
-Mat Mat::augment()
+Mat Mat::augment() const
 {
     Mat c(w * 2, h);
     for (int i = 0; i < h; ++i)
@@ -399,7 +408,7 @@ Mat Mat::augment()
     return c;
 }
 
-Mat Mat::invert()
+Mat Mat::invert() const
 {
     Mat none;
 

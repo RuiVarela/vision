@@ -9,12 +9,12 @@ void markSpot(Mat &im, Point const &p)
     int y = int(p.y);
     for (int i = -9; i < 10; ++i)
     {
-        im.set(x + i, y, 0, 1);
-        im.set(x, y + i, 0, 1);
-        im.set(x + i, y, 1, 0);
-        im.set(x, y + i, 1, 0);
-        im.set(x + i, y, 2, 1);
-        im.set(x, y + i, 2, 1);
+        im.setClamp(x + i, y, 0, 1);
+        im.setClamp(x, y + i, 0, 1);
+        im.setClamp(x + i, y, 1, 0);
+        im.setClamp(x, y + i, 1, 0);
+        im.setClamp(x + i, y, 2, 1);
+        im.setClamp(x, y + i, 2, 1);
     }
 }
 

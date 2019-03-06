@@ -102,6 +102,54 @@ int modelInliers(const Mat &H, Matches &m, float thresh)
        return count;
 }
 
+void randomizeMatches(Matches& m) {
+    // TODO: implement Fisher-Yates to shuffle the array.
+}
+
+Mat computeHomography(Matches const& matches) {
+    int n = int(matches.size());
+    Mat M(8, n * 2);
+    Mat b(1, n * 2);
+
+    for(int i = 0; i < n; ++i){
+        double x  = matches[i].p.x;
+        double xp = matches[i].q.x;
+        double y  = matches[i].p.y;
+        double yp = matches[i].q.y;
+        // TODO: fill in the matrices M and b.
+
+    }
+
+    Mat a = Mat::systemSolve(M, b);
+
+    // If a solution can't be found, return empty matrix;
+    if(a.size() == 0) 
+        return a;
+
+    Mat H(3, 3);
+    // TODO: fill in the homography H based on the result in a.
+
+    return H;
+}
+
+Mat RANSAC(Matches &m, float thresh, int k, int cutoff)
+{
+    int e;
+    int best = 0;
+    Mat Hb = Mat::makeTranslation3x3(256, 0);
+    // TODO: fill in RANSAC algorithm.
+    // for k iterations:
+    //     shuffle the matches
+    //     compute a homography with a few matches (how many??)
+    //     if new homography is better than old (how can you tell?):
+    //         compute updated homography using all inliers
+    //         remember it and how good it is
+    //         if it's better than the cutoff:
+    //             return it immediately
+    // if we get to the end return the best homography
+    return Hb;
+}
+
 Descriptor describeIndex(Mat const&im, int i)
 {
     int w = 5;
@@ -118,7 +166,7 @@ Descriptor describeIndex(Mat const&im, int i)
         float cval = im.data[c*im.w*im.h + i];
         for(int dx = -w/2; dx < (w+1)/2; ++dx){
             for(int dy = -w/2; dy < (w+1)/2; ++dy){
-                float val = im.get(i%im.w+dx, i/im.w+dy, c);
+                float val = im.getClamp(i%im.w+dx, i/im.w+dy, c);
                 d.data[count++] = cval - val;
             }
         }
