@@ -79,8 +79,8 @@ void test_draw_matches() {
     vs::Mat a = vs::loadImage("data/Rainier1.png", 3);
     vs::Mat b = vs::loadImage("data/Rainier2.png", 3);
 
-    vs::Mat out = vs::drawMatches(a,b, 2.0f, 50.0f, 3);
-    vs::saveImage("harris_matches.png", out);
+    vs::Mat out = vs::drawMatches(a, b, 2.0f, 50.0f, 3);
+    //vs::saveImage("harris_matches.png", out);
 
     vs::Mat result = vs::loadImage("test/harris_matches.png");
     UTEST(vs::sameMat(out, result));

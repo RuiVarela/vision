@@ -12,9 +12,7 @@ float Point::distance(const Point &p, const Point &q)
 void Descriptor::reshape(int size)
 {
     if (n == size)
-    {
         return;
-    }
 
     shared_data.reset();
     data = nullptr;
@@ -23,7 +21,7 @@ void Descriptor::reshape(int size)
     if (size > 0)
     {
         n = size;
-        data = static_cast<float *>(calloc(size_t(size), sizeof(float)));
+        data = static_cast<float*>(calloc(size_t(size), sizeof(float)));
         if (data)
         {
             shared_data = std::shared_ptr<float>(data, free);
@@ -31,54 +29,96 @@ void Descriptor::reshape(int size)
     }
 }
 
-float Descriptor::l1Distance(float *a, float *b, int n)
+Descriptor Descriptor::describe(const Mat &im, int i)
 {
-    // TODO: return the correct number.
-    return 0;
+    int x = i % im.w;
+    int y = i / im.w;
+
+    int w = 5;
+    Descriptor d;
+    d.p.x = float(x);
+    d.p.y = float(y);
+    d.reshape(w * w * im.c);
+
+    int count = 0;
+    // If you want you can experiment with other descriptors
+    // This subtracts the central value from neighbors
+    // to compensate some for exposure/lighting changes.
+    for(int c = 0; c < im.c; ++c){
+        float cval = im.get(x, y, c);
+
+        for(int dx = -w/2; dx < (w+1)/2; ++dx)
+            for(int dy = -w/2; dy < (w+1)/2; ++dy)
+                d.data[count++] = cval - im.getClamp(x + dx, y + dy, c);
+    }
+
+    return d;
 }
 
-int matchCompare(Match &a, Match &b)
+float Descriptor::distance(const Descriptor &a, const Descriptor &b)
 {
-    if (a.distance < b.distance) return -1;
-    else if (a.distance > b.distance) return  1;
-    else return 0;
+    assert(a.n == b.n && a.n > 0);
+
+    float sum = 0;
+    for (int i = 0; i != a.n; ++i)
+        sum += fabsf(a.data[i] - b.data[i]);
+
+    return sum;
 }
 
 Matches matchDescriptors(const Descriptors &a, const Descriptors &b)
 {
+    assert(!a.empty() && !b.empty());
+
     Matches output;
 
-    int i,j;
+    // We will have at most a.size matches.
+    for(size_t ai = 0; ai < a.size(); ++ai) {
 
-    // We will have at most an matches.
-    for(size_t j = 0; j < a.size(); ++j){
-        // TODO: for every descriptor in a, find best match in b.
-        // record ai as the index in *a and bi as the index in *b.
-        int bind = 0; // <- find the best match
+        float best_distance = std::numeric_limits<float>::max();
+        size_t best_index = 0;
+
+        for(size_t bi = 0; bi < b.size(); ++bi) {
+            float distance = Descriptor::distance(a[ai], b[bi]);
+            if (distance < best_distance) {
+                best_distance = distance;
+                best_index = bi;
+            }
+        }
 
         Match m;
-        m.ai = j;
-        m.bi = bind; // <- should be index in b.
-        m.p = a[j].p;
-        m.q = b[bind].p;
-        m.distance = 0; // <- should be the smallest L1 distance!
+        m.ai = int(ai);
+        m.bi = int(best_index);
+        m.p = a[size_t(m.ai)].p;
+        m.q = b[size_t(m.bi)].p;
+        m.distance = best_distance; // <- should be the smallest L1 distance!
 
         output.push_back(m);
     }
 
-    int count = 0;
-    int *seen = (int*)calloc(b.size(), sizeof(int));
-    // TODO: we want matches to be injective (one-to-one).
-    // Sort matches based on distance using match_compare and qsort.
+
+    // we want matches to be injective (one-to-one).
+    // Sort matches based on distance
     // Then throw out matches to the same element in b. Use seen to keep track.
     // Each point should only be a part of one match.
     // Some points will not be in a match.
-    // In practice just bring good matches to front of list, set *mn.
-    //*mn = count;
-    free(seen);
+    // In practice just bring good matches to front of list
 
+    std::sort(output.begin(), output.end(), [] (Match const& a, Match const&b) { return (a.distance < b.distance); });
 
-    return output;
+    Matches filtered;
+
+    std::vector<bool> seen(b.size(), false);
+    for (size_t i = 0; i != output.size(); ++i) {
+        size_t bi = size_t(output[i].bi);
+        if (seen[bi])
+            continue;
+
+        seen[bi] = true;
+        filtered.push_back(output[i]);
+    }
+
+    return filtered;
 }
 
 
@@ -120,7 +160,7 @@ Mat computeHomography(Matches const& matches) {
 
     }
 
-    Mat a = Mat::systemSolve(M, b);
+    Mat a = Mat::llsSolve(M, b);
 
     // If a solution can't be found, return empty matrix;
     if(a.size() == 0) 
@@ -148,30 +188,6 @@ Mat RANSAC(Matches &m, float thresh, int k, int cutoff)
     //             return it immediately
     // if we get to the end return the best homography
     return Hb;
-}
-
-Descriptor describeIndex(Mat const&im, int i)
-{
-    int w = 5;
-    Descriptor d;
-    d.p.x = float(i % im.w);
-    d.p.y = float(i / im.w);
-    d.reshape(w*w*im.c);
-
-    int count = 0;
-    // If you want you can experiment with other descriptors
-    // This subtracts the central value from neighbors
-    // to compensate some for exposure/lighting changes.
-    for(int c = 0; c < im.c; ++c){
-        float cval = im.data[c*im.w*im.h + i];
-        for(int dx = -w/2; dx < (w+1)/2; ++dx){
-            for(int dy = -w/2; dy < (w+1)/2; ++dy){
-                float val = im.getClamp(i%im.w+dx, i/im.w+dy, c);
-                d.data[count++] = cval - val;
-            }
-        }
-    }
-    return d;
 }
 
 void nonMaxSupression(Mat const &im, Mat &dst, int w)
@@ -264,12 +280,14 @@ Descriptors harrisCornerDetector(Mat const &im, float sigma, float thresh, int n
 
     // Run NMS on the responses
     nonMaxSupression(R, S, nms);
+
     for (int i = 0; i != S.w * S.h; ++i)
         if (S.data[i] > thresh)
-            d.push_back(describeIndex(S, i));
+            d.push_back(Descriptor::describe(im, i));
 
     return d;
 }
+
 
 
 

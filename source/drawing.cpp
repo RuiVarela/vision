@@ -62,9 +62,9 @@ Mat drawMatches(const Mat &a, const Mat &b, const Matches &matches, int inliers)
         for(int j = bx; j < ex + a.w; ++j){
             //int r = (float)(j-bx)/(ex+a.w - bx)*(ey - by) + by;
             int r = int(float(j-bx)/(ex+a.w - bx)*(ey - by) + by);
-            both.set(j, r, 0, int(i) < inliers ? 0 : 1);
-            both.set(j, r, 1, int(i) < inliers ? 1 : 0);
-            both.set(j, r, 2, 0);
+            both.set(j, r, 0, int(i) < inliers ? 0.0f : 1.0f);
+            both.set(j, r, 1, int(i) < inliers ? 1.0f : 0.0f);
+            both.set(j, r, 2, 0.0f);
         }
     }
     return both;

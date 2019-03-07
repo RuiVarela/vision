@@ -21,7 +21,7 @@ void del_arg(int argc, char **argv, int index)
     int i;
     for(i = index; i < argc-1; ++i) 
         argv[i] = argv[i+1];
-    argv[i] = 0;
+    argv[i] = nullptr;
 }
 
 bool findArg(int argc, char *argv[], std::string arg)
@@ -68,7 +68,7 @@ float findArgFloat(int argc, char **argv, std::string arg, float def)
 
         if (arg == argv[i])
         {
-            def = atof(argv[i + 1]);
+            def = float(atof(argv[i + 1]));
             del_arg(argc, argv, i);
             del_arg(argc, argv, i);
             break;
@@ -114,7 +114,7 @@ bool sameChannel(Mat const &a, Mat const &b, int const ac, int const bc)
             int bi = b.w * b.h * bc + b.w * y + x;
             if (!equivalent(a.data[ai], b.data[bi], epsilon))
             {
-                printf("Mismatch (%d %d) %f %f\n", x, y, a.data[ai], b.data[bi]);
+                printf("Mismatch (%d %d) %f %f\n", x, y, double(a.data[ai]), double(b.data[bi]));
                 return false;
             }
         }

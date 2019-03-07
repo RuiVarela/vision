@@ -101,9 +101,9 @@ public:
   static void vmult(const Mat &a, const Mat &b, Mat& p);
   static Mat vmult(const Mat &a, const Mat &b);
 
-  // system of linear equations
-  static Mat sleSolve(Mat& A, Mat const& b);
-  static Mat systemSolve(Mat& M, Mat const& b);
+  // linear least squares solver
+  // https://textbooks.math.gatech.edu/ila/least-squares.html
+  static Mat llsSolve(Mat const& M, Mat const& b);
 
 
   int w;    // width

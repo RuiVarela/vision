@@ -16,6 +16,8 @@ struct Point
     float y;
 
     // Calculate L2 distance between two points.
+    // Minkowski distance between two points of order 1
+    // https://en.wikipedia.org/wiki/Minkowski_distance
     // point p, q: points.
     // returns: L2 distance between them.
     static float distance(Point const& p, Point const& q);
@@ -33,16 +35,30 @@ struct Descriptor
 
     void reshape(int size);
 
-    // Calculates L1 distance between to floating point arrays.
+
+    // Create a feature descriptor for an index in an image.
+    // very simple descriptor : its just a patch of neighbors pixels with the central one subtracted
+    // to compensate some for exposure/lighting changes.
+    // image im: source image.
+    // int i: index in image for the pixel we want to describe.
+    // returns: descriptor for that index.
+    static Descriptor describe(Mat const&im, int i);
+
+    // Calculates L1 distance between to Descriptors
+    // calculates the l1 distance on the floating point arrays.
+    // Minkowski distance between two points of order 1
+    // https://en.wikipedia.org/wiki/Minkowski_distance
     // float *a, *b: arrays to compare.
     // int n: number of values in each array.
     // returns: l1 distance between arrays (sum of absolute differences).
-    static float l1Distance(float *a, float *b, int n);
+    static float distance(Descriptor const& a, Descriptor const& b);
 
   private:
     std::shared_ptr<float> shared_data;
 };
 using Descriptors = std::vector<Descriptor>;
+
+
 
 // A match between two points in an image.
 // point p, q: x,y coordinates of the two matching pixels.
@@ -57,10 +73,6 @@ struct Match {
 };
 using Matches = std::vector<Match>;
 
-// Comparator for matches
-// const void *a, *b: pointers to the matches to compare.
-// returns: result of comparison, 0 if same, 1 if a > b, -1 if a < b.
-int matchCompare(Match& a, Match& b);
 
 // Finds best matches between descriptors of two images.
 // descriptor *a, *b: array of descriptors for pixels in two images.
@@ -102,14 +114,6 @@ Mat RANSAC(Matches& m, float thresh, int k, int cutoff);
 // point p: point to project.
 // returns: point projected using the homography.
 Point projectPoint(Mat const& H, Point const& p);
-
-// Create a feature descriptor for an index in an image.
-// very simple descriptior : its just a patch of neighbors pixels with the central one subtracted
-// to compensate some for exposure/lighting changes.
-// image im: source image.
-// int i: index in image for the pixel we want to describe.
-// returns: descriptor for that index.
-Descriptor describeIndex(Mat const&im, int i);
 
 // Perform non-max supression on an image of feature responses.
 // image im: 1-channel image of feature responses.
