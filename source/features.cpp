@@ -124,12 +124,20 @@ Matches matchDescriptors(const Descriptors &a, const Descriptors &b)
 
 Point projectPoint(const Mat &H, const Point &p)
 {
-    Mat c(1, 3);
+    assert(H.w == 3 && H.h == 3 && H.c == 1);
+
+    Mat pm(1, 3);
+    pm(0,0) = p.x;
+    pm(1,0) = p.x;
+    pm(2,0) = 1.0f;
+
+    Mat projected = Mat::mmult(H, pm);
+
+
     // TODO: project point p with homography H.
     // Remember that homogeneous coordinates are equivalent up to scalar.
     // Have to divide by.... something...
-    Point q(0, 0);
-    return q;
+    return Point(projected(0,0), projected(0,0));
 }
 
 int modelInliers(const Mat &H, Matches &m, float thresh)

@@ -501,7 +501,8 @@ Mat Mat::makeTranslation3x3(float dx, float dy)
 void Mat::mmult(const Mat &a, const Mat &b, Mat &p)
 {
     assert(a.w == b.h);
-    p.reshape(a.w, a.h, 1);
+    p.reshape(b.w, a.h, 1);
+    p.zero();
 
     for (int i = 0; i < p.h; ++i)
         for (int j = 0; j < p.w; ++j)
@@ -520,7 +521,7 @@ void Mat::vmult(const Mat &a, const Mat &b, Mat &p)
 {
     assert(b.size() == a.w);
 
-    p.reshape(a.h, 1, 1);
+    p.reshape(1, a.h, 1);
     p.zero();
 
     for (int i = 0; i < a.h; ++i)

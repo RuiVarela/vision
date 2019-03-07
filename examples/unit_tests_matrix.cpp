@@ -1,6 +1,5 @@
 #include "../source/vs.hpp"
 
-
 //
 // Convert Joseph Redmon matrix source to our code
 //
@@ -492,11 +491,18 @@ void test_basics() {
 
         vs::Mat v;
         matrix v1;
-        randomize(v, v1, 1, 3);
+        randomize(v, v1, 3, 1);
 
-        double *p = matrix_mult_vector(a1, v1.data[0]);
-        memcpy(v1.data[0], p, size_t(v1.cols) * sizeof (double));
-        free(p);
+        double *pi = static_cast<double*>(calloc(size_t(v1.rows), sizeof(double)));
+        for(int i = 0; i != v1.rows; ++i) {
+            pi[i] = v1.data[i][0];
+        }
+        double *po = matrix_mult_vector(a1, pi);
+        for(int i = 0; i != v1.rows; ++i) {
+            v1.data[i][0] = po[i];
+        }
+        free(pi);
+        free(po);
 
         UTEST(same(vs::Mat::vmult(a, v), v1));
 
@@ -528,10 +534,16 @@ void test_invert() {
     }
 }
 
+
+void test_mult() {
+
+}
+
 int unit_tests_matrix(int argc, char **argv)
 {
     test_basics();
     test_invert();
+    test_mult();
 
     return 0;
 }
