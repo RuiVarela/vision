@@ -16,7 +16,7 @@ struct Point
     float y;
 
     // Calculate L2 distance between two points.
-    // Minkowski distance between two points of order 1
+    // Minkowski distance between two points of order 2
     // https://en.wikipedia.org/wiki/Minkowski_distance
     // point p, q: points.
     // returns: L2 distance between them.
@@ -34,7 +34,6 @@ struct Descriptor
     float *data = nullptr;
 
     void reshape(int size);
-
 
     // Create a feature descriptor for an index in an image.
     // very simple descriptor : its just a patch of neighbors pixels with the central one subtracted
@@ -58,8 +57,6 @@ struct Descriptor
 };
 using Descriptors = std::vector<Descriptor>;
 
-
-
 // A match between two points in an image.
 // point p, q: x,y coordinates of the two matching pixels.
 // int ai, bi: indexes in the descriptor array. For eliminating duplicates.
@@ -72,7 +69,6 @@ struct Match {
     float distance;
 };
 using Matches = std::vector<Match>;
-
 
 // Finds best matches between descriptors of two images.
 // descriptor *a, *b: array of descriptors for pixels in two images.
@@ -93,6 +89,7 @@ int modelInliers(Mat const& H, Matches& m, float thresh);
 
 // Randomly shuffle matches for RANSAC.
 // Fisher-Yate
+// https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle#The_modern_algorithm
 // match *m: matches to shuffle in place.
 void randomizeMatches(Matches& m);
 

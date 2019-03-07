@@ -86,10 +86,12 @@ void test_draw_matches() {
     UTEST(vs::sameMat(out, result));
 }
 
+
 int unit_tests_features(int argc, char **argv)
 {
     test_filter();
     test_draw_harris();
     test_draw_matches();
+
     return 0;
 }

@@ -37,6 +37,7 @@
         "iomanip": "cpp",
         "cassert": "cpp",
         "cstring": "cpp",
-        "deque": "cpp"
+        "deque": "cpp",
+        "list": "cpp"
     }
 }

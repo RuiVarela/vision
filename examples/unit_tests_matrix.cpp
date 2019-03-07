@@ -534,16 +534,33 @@ void test_invert() {
     }
 }
 
+void test_proj_mult()
+{
+    for (int i = 0; i < 100; ++i)
+    {
+        vs::Mat m;
+        matrix m1;
+        randomize(m, m1, 3, 3);
 
-void test_mult() {
+        vs::Mat p;
+        matrix p1;
+        randomize(p, p1, 3, 1);
 
+        vs::Mat res = vs::Mat::mmult(m, p);
+        matrix res1 = matrix_mult_matrix(m1, p1);
+        UTEST(same(res, res1));
+
+        free_matrix(m1);
+        free_matrix(res1);
+    }
 }
 
 int unit_tests_matrix(int argc, char **argv)
 {
     test_basics();
     test_invert();
-    test_mult();
+    test_proj_mult();
+
 
     return 0;
 }

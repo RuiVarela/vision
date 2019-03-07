@@ -5,8 +5,9 @@ namespace vs
 
 float Point::distance(const Point &p, const Point &q)
 {
-    // TODO: should be a quick one.
-       return 0;
+    float x = q.x - p.x;
+    float y = q.y - p.y;
+    return sqrtf(x * x + y * y);
 }
 
 void Descriptor::reshape(int size)
@@ -121,7 +122,6 @@ Matches matchDescriptors(const Descriptors &a, const Descriptors &b)
     return filtered;
 }
 
-
 Point projectPoint(const Mat &H, const Point &p)
 {
     assert(H.w == 3 && H.h == 3 && H.c == 1);
@@ -132,50 +132,103 @@ Point projectPoint(const Mat &H, const Point &p)
     pm(2,0) = 1.0f;
 
     Mat projected = Mat::mmult(H, pm);
-
-
-    // TODO: project point p with homography H.
-    // Remember that homogeneous coordinates are equivalent up to scalar.
-    // Have to divide by.... something...
-    return Point(projected(0,0), projected(0,0));
+    return Point(projected(0,0) / projected(2,0), 
+                 projected(1,0) / projected(2,0));
 }
 
 int modelInliers(const Mat &H, Matches &m, float thresh)
 {
-    int i;
-       int count = 0;
-       // TODO: count number of matches that are inliers
-       // i.e. distance(H*p, q) < thresh
-       // Also, sort the matches m so the inliers are the first 'count' elements.
-       return count;
+    // count number of matches that are inliers
+    // i.e. distance(H*p, q) < thresh
+    // Also, sort the matches m so the inliers are the first 'count' elements.
+
+    Matches inliers;
+    Matches outliers;
+
+    for (Match const &current : m)
+    {
+        Point projected = projectPoint(H, current.p);
+        float distance = Point::distance(current.q, projected);
+        if (distance < thresh)
+            inliers.push_back(current);
+        else
+            outliers.push_back(current);
+    }
+
+    m.assign(inliers.begin(), inliers.end());
+    std::copy(outliers.begin(), outliers.end(), std::back_inserter(m));
+
+    return int(inliers.size());
 }
 
 void randomizeMatches(Matches& m) {
-    // TODO: implement Fisher-Yates to shuffle the array.
+    // Fisher-Yates to shuffle the array.
+    for (size_t i = 0; i != m.size() - 2; ++i){
+        size_t j = i + (rand() % (m.size() - i));
+        std::swap(m[i], m[j]);
+    }
 }
 
-Mat computeHomography(Matches const& matches) {
-    int n = int(matches.size());
+//https://math.stackexchange.com/questions/494238/how-to-compute-homography-matrix-h-from-corresponding-points-2d-2d-planar-homog
+Mat computeHomography(Matches const &matches)
+{
+    size_t n = matches.size();
     Mat M(8, n * 2);
     Mat b(1, n * 2);
 
-    for(int i = 0; i < n; ++i){
-        double x  = matches[i].p.x;
+    // fill in the matrices M and b.
+    for (size_t i = 0; i < n; ++i)
+    {
+        double x = matches[i].p.x;
         double xp = matches[i].q.x;
-        double y  = matches[i].p.y;
-        double yp = matches[i].q.y;
-        // TODO: fill in the matrices M and b.
 
+        double y = matches[i].p.y;
+        double yp = matches[i].q.y;
+
+        size_t r = i * 2;
+        M(r, 0) = x;
+        M(r, 1) = y;
+        M(r, 2) = 1.0f;
+        M(r, 3) = 0.0f;
+        M(r, 4) = 0.0f;
+        M(r, 5) = 0.0f;
+        M(r, 6) = -x * xp;
+        M(r, 7) = -y * yp;
+        b(r, 0) = xp;
+
+        r++;
+
+        M(r, 0) = 0.0f;
+        M(r, 1) = 0.0f;
+        M(r, 2) = 0.0f;
+        M(r, 3) = x;
+        M(r, 4) = y;
+        M(r, 5) = 1.0f;
+        M(r, 6) = -x * xp;
+        M(r, 7) = -y * yp;
+        b(r, 0) = yp;
     }
 
     Mat a = Mat::llsSolve(M, b);
 
     // If a solution can't be found, return empty matrix;
-    if(a.size() == 0) 
+    if (a.size() == 0)
         return a;
 
+    // fill in the homography H based on the result in a.
     Mat H(3, 3);
-    // TODO: fill in the homography H based on the result in a.
+
+    H(0,0) = a(0,0); 
+    H(0,1) = a(1,0); 
+    H(0,2) = a(2,0); 
+    
+    H(1,0) = a(3,0);
+    H(1,1) = a(4,0);
+    H(1,2) = a(5,0);
+
+    H(2,0) = a(6,0);
+    H(2,1) = a(7,0);
+    H(2,2) = 1.0;
 
     return H;
 }
