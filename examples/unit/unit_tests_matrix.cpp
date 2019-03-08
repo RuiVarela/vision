@@ -56,18 +56,6 @@ static void free_matrix(matrix m)
     free(m.data);
 }
 
-static matrix copy_matrix(matrix m)
-{
-    int i,j;
-    matrix c = make_matrix(m.rows, m.cols);
-    for(i = 0; i < m.rows; ++i){
-        for(j = 0; j < m.cols; ++j){
-            c.data[i][j] = m.data[i][j];
-        }
-    }
-    return c;
-}
-
 static matrix augment_matrix(matrix m)
 {
     int i,j;
@@ -139,16 +127,6 @@ static matrix transpose_matrix(matrix m)
     return t;
 }
 
-static void scale_matrix(matrix m, double s)
-{
-    int i, j;
-    for(i = 0; i < m.rows; ++i){
-        for(j =0 ; j < m.cols; ++j){
-            m.data[i][j] *= s;
-        }
-    }
-}
-
 static double *matrix_mult_vector(matrix m, double *v)
 {
     double *p = static_cast<double*>(calloc(size_t(m.rows), sizeof(double)));
@@ -159,26 +137,6 @@ static double *matrix_mult_vector(matrix m, double *v)
         }
     }
     return p;
-}
-
-static double *LUP_solve(matrix L, matrix U, int *p, double *b)
-{
-    int i, j;
-    double *c = static_cast<double*>(calloc(size_t(L.rows), sizeof (double)));
-    for(i = 0; i < L.rows; ++i){
-        int pi = p[i];
-        c[i] = b[pi];
-        for(j = 0; j < i; ++ j){
-            c[i] -= L.data[i][j]*c[j];
-        }
-    }
-    for(i = U.rows-1; i >= 0; --i){
-        for(j = i+1; j < U.cols; ++j){
-            c[i] -= U.data[i][j]*c[j];
-        }
-        c[i] /= U.data[i][i];
-    }
-    return c;
 }
 
 static matrix matrix_invert(matrix m)
@@ -247,55 +205,6 @@ static matrix matrix_invert(matrix m)
     return inv;
 }
 
-static int* in_place_LUP(matrix m)
-{
-    int *pivot = static_cast<int*>(calloc(size_t(m.rows), sizeof(int)));
-    if(m.rows != m.cols){
-        fprintf(stderr, "Matrix not square\n");
-        return 0;
-    }
-
-    int i, j, k;
-    for(k = 0; k < m.rows; ++k) pivot[k] = k;
-    for(k = 0; k < m.rows; ++k){
-        double p = 0.;
-        int index = -1;
-        for(i = k; i < m.rows; ++i){
-            double val = fabs(m.data[i][k]);
-            if(val > p){
-                p = val;
-                index = i;
-            }
-        }
-        if(index == -1){
-            fprintf(stderr, "Matrix is singular\n");
-            return 0;
-        }
-
-        int swapi = pivot[k];
-        pivot[k] = pivot[index];
-        pivot[index] = swapi;
-
-        double *swap = m.data[index];
-        m.data[index] = m.data[k];
-        m.data[k] = swap;
-
-        for(i = k+1; i < m.rows; ++i){
-            m.data[i][k] = m.data[i][k]/m.data[k][k];
-            for(j = k+1; j < m.cols; ++j){
-                m.data[i][j] -= m.data[i][k] * m.data[k][j];
-            }
-        }
-    }
-    return pivot;
-}
-
-
-static double *sle_solve(matrix A, double *b)
-{
-    int *p = in_place_LUP(A);
-    return LUP_solve(A, A, p, b);
-}
 
 static matrix solve_system(matrix M, matrix b)
 {
@@ -394,6 +303,21 @@ static void test_basics() {
     t =  make_translation_homography(120.0f, 40.0f);
     UTEST(same(vs::Mat::makeTranslation3x3(120.0f, 40.0f), t));
     free_matrix(t);
+
+    {
+        vs::Mat m;
+        matrix m1;
+        randomize(m, m1, 10, 10);
+
+        vs::Matd md;
+        //m.convert(md);
+        //UTEST(vs::sameMat(m, md));
+
+        md = m.convert<double>();
+
+
+        free_matrix(m1);
+    }
 
 
     for (int i = 0; i != 10; ++i) {

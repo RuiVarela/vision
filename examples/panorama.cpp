@@ -1,12 +1,12 @@
-#include "source/vs.hpp"
+#include "../source/vs.hpp"
 
 // Stitches two images together using a projective transformation.
 // image a, b: images to stitch.
 // matrix H: homography from image a coordinates to image b coordinates.
 // returns: combined image stitched together.
-vs::Mat combine_images(vs::Mat const &a, vs::Mat const &b, vs::Mat const &H)
+vs::Mat combine_images(vs::Mat const &a, vs::Mat const &b, vs::Matd const &H)
 {
-    vs::Mat Hinv = H.invert();
+    vs::Matd Hinv = H.invert();
 
     // Project the corners of image b into image a coordinates.
     vs::Point c1 = vs::projectPoint(Hinv, vs::Point(0, 0));
@@ -77,7 +77,7 @@ vs::Mat panorama_image(vs::Mat &a, vs::Mat &b, float sigma, float thresh, int nm
     vs::Matches m = vs::matchDescriptors(ad, bd);
 
     // Run RANSAC to find the homography
-    vs::Mat H = RANSAC(m, inlier_thresh, iters, cutoff);
+    vs::Matd H = RANSAC(m, inlier_thresh, iters, cutoff);
 
     if (1)
     {
