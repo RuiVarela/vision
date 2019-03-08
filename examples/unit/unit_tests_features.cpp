@@ -10,7 +10,7 @@
 }\
 
 
-void test_filter(){
+static void test_filter(){
     vs::Mat im = vs::loadImage("data/Rainier1.png", 3);
 
     float const sigma = 2.0f;
@@ -61,7 +61,7 @@ void test_filter(){
     UTEST(vs::sameMat(S, S1));
 }
 
-void test_draw_harris() {
+static void test_draw_harris() {
     vs::Mat im = vs::loadImage("data/Rainier1.png", 3);
 
     vs::Mat S;
@@ -75,7 +75,7 @@ void test_draw_harris() {
     UTEST(vs::sameMat(im, result));
 }
 
-void test_draw_matches() {
+static void test_draw_matches() {
     vs::Mat a = vs::loadImage("data/Rainier1.png", 3);
     vs::Mat b = vs::loadImage("data/Rainier2.png", 3);
 
@@ -86,12 +86,126 @@ void test_draw_matches() {
     UTEST(vs::sameMat(out, result));
 }
 
+static void test_homography() {
+
+    // test project points
+    {
+        vs::Matches matches;
+        vs::Match match;
+
+        match.p.x = 0.0f;
+        match.p.y = 0.0f;
+        matches.push_back(match);
+
+        match.p.x = 100.0f;
+        match.p.y = 0.0f;
+        matches.push_back(match);
+
+        match.p.x = 100.0f;
+        match.p.y = 20.0f;
+        matches.push_back(match);
+
+        match.p.x = 0.0f;
+        match.p.y = 20.0f;
+        matches.push_back(match);
+        for(vs::Match& current : matches) {
+            current.q = current.p;
+            current.q.x += 100.0f;
+            current.q.y += 100.0f;
+        }
+
+        vs::Mat H = vs::Mat::makeTranslation3x3(100.f, 100.f);
+        int inliers = vs::modelInliers(H, matches, 2.0f);
+        UTEST(inliers == 4);
+
+
+    }
+
+
+
+
+
+
+    {
+        vs::Matches matches;
+        vs::Match match;
+
+        match.p.x = 1.0f;
+        match.p.y = 1.0f;
+        matches.push_back(match);
+
+        match.p.x = 100.0f;
+        match.p.y = 1.0f;
+        matches.push_back(match);
+
+        match.p.x = 100.0f;
+        match.p.y = 20.0f;
+        matches.push_back(match);
+
+        match.p.x = 1.0f;
+        match.p.y = 20.0f;
+        matches.push_back(match);
+
+        for(vs::Match& current : matches) {
+            current.q = current.p;
+            current.q.x += 100.0f;
+            current.q.y += 100.0f;
+        }
+
+
+        vs::Mat H = computeHomography(matches);
+        assert(H.size() > 0);
+
+        int inliers = vs::modelInliers(H, matches, 2.0f);
+        UTEST(inliers == 4);
+    }
+
+}
+
+static void test_ransac() {
+
+    srand(10);
+
+    vs::Mat a = vs::loadImage("data/Rainier1.png", 3);
+    vs::Mat b = vs::loadImage("data/Rainier2.png", 3);
+
+    float sigma = 2.0;
+    int thresh = 50;
+    int nms = 3;
+
+    // Calculate corners and descriptors
+    vs::Descriptors ad = vs::harrisCornerDetector(a, sigma, thresh, nms);
+    vs::Descriptors bd = vs::harrisCornerDetector(b, sigma, thresh, nms);
+
+    // Find matches
+    vs::Matches m = vs::matchDescriptors(ad, bd);
+
+    float inlier_thresh = 2.0f;
+    int iters = 10000;
+    int cutoff = 30;
+
+    // Run RANSAC to find the homography
+    vs::Mat H = RANSAC(m, inlier_thresh, iters, cutoff);
+
+    // Mark corners and matches between images
+    vs::markCorners(a, ad);
+    vs::markCorners(b, bd);
+    vs::Mat inlier_matches = vs::drawInliers(a, b, H, m, inlier_thresh);
+    vs::saveImage("inliers.png", inlier_matches);
+
+
+    vs::Mat result = vs::loadImage("test/harris_matches.png");
+    UTEST(vs::sameMat(inlier_matches, result));
+
+}
 
 int unit_tests_features(int argc, char **argv)
 {
-    test_filter();
-    test_draw_harris();
-    test_draw_matches();
+    //test_filter();
+    //test_draw_harris();
+    //test_draw_matches();
+    test_homography();
+    //test_ransac();
 
     return 0;
 }

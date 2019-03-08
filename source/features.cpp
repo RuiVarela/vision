@@ -128,7 +128,7 @@ Point projectPoint(const Mat &H, const Point &p)
 
     Mat pm(1, 3);
     pm(0,0) = p.x;
-    pm(1,0) = p.x;
+    pm(1,0) = p.y;
     pm(2,0) = 1.0f;
 
     Mat projected = Mat::mmult(H, pm);
@@ -164,7 +164,7 @@ int modelInliers(const Mat &H, Matches &m, float thresh)
 void randomizeMatches(Matches& m) {
     // Fisher-Yates to shuffle the array.
     for (size_t i = 0; i != m.size() - 2; ++i){
-        size_t j = i + (rand() % (m.size() - i));
+        size_t j = i + size_t(rand() % int(m.size() - i));
         std::swap(m[i], m[j]);
     }
 }
@@ -173,19 +173,19 @@ void randomizeMatches(Matches& m) {
 Mat computeHomography(Matches const &matches)
 {
     size_t n = matches.size();
-    Mat M(8, n * 2);
-    Mat b(1, n * 2);
+    Mat M(8, int(n * 2));
+    Mat b(1, int(n * 2));
 
     // fill in the matrices M and b.
     for (size_t i = 0; i < n; ++i)
     {
-        double x = matches[i].p.x;
-        double xp = matches[i].q.x;
+        float x = matches[i].p.x;
+        float xp = matches[i].q.x;
 
-        double y = matches[i].p.y;
-        double yp = matches[i].q.y;
+        float y = matches[i].p.y;
+        float yp = matches[i].q.y;
 
-        size_t r = i * 2;
+        int r = int(i * 2);
         M(r, 0) = x;
         M(r, 1) = y;
         M(r, 2) = 1.0f;
@@ -235,10 +235,9 @@ Mat computeHomography(Matches const &matches)
 
 Mat RANSAC(Matches &m, float thresh, int k, int cutoff)
 {
-    int e;
-    int best = 0;
-    Mat Hb = Mat::makeTranslation3x3(256, 0);
-    // TODO: fill in RANSAC algorithm.
+    assert(m.size() > 4);
+
+    // RANSAC algorithm.
     // for k iterations:
     //     shuffle the matches
     //     compute a homography with a few matches (how many??)
@@ -248,6 +247,44 @@ Mat RANSAC(Matches &m, float thresh, int k, int cutoff)
     //         if it's better than the cutoff:
     //             return it immediately
     // if we get to the end return the best homography
+
+    //n – minimum number of data points required to estimate model parameters
+    const int n = 4;
+    int best = 0;
+    Mat Hb;
+    Matches subset;
+
+    int current_iteration = 0;
+    while (current_iteration < k) {
+        current_iteration++;
+
+        randomizeMatches(m);
+        subset.assign(m.begin(), m.begin() + n);
+        Mat H = computeHomography(subset);
+        if (H.size() == 0) {
+            std::cerr << "Homography is empty" << std::endl;
+            continue;
+        }
+
+        int inliers = modelInliers(H, m, thresh);
+        if (inliers <= best)
+            continue;
+
+        subset.assign(m.begin(), m.begin() + inliers);
+        H = computeHomography(subset);
+        if (H.size() == 0) {
+            std::cerr << "Homography is empty" << std::endl;
+            continue;
+        }
+
+        best = modelInliers(H, m, thresh);
+        Hb = H;
+
+        if (best > cutoff) {
+            break;
+        }
+    }
+
     return Hb;
 }
 

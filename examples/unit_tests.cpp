@@ -13,6 +13,8 @@ int main(int argc, char **argv)
     unit_tests_features(argc, argv);
     unit_tests_matrix(argc, argv);
     std::cout << "missing test systemSolve" << std::endl;
+    std::cout << "review test_homography" << std::endl;
+
     std::cout << "unit tests finished" << std::endl;
 
     return 0;

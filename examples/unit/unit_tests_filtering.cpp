@@ -9,7 +9,7 @@
     }\
 }\
 
-void test_nn_resize()
+static void test_nn_resize()
 {
     {
         vs::Mat im = vs::loadImage("test/dogsmall.jpg");
@@ -27,7 +27,7 @@ void test_nn_resize()
 
 }
 
-void test_bl_resize()
+static void test_bl_resize()
 {
     {
         vs::Mat im = vs::loadImage("test/dogsmall.jpg");
@@ -44,7 +44,7 @@ void test_bl_resize()
     }
 }
 
-void test_multiple_resize()
+static void test_multiple_resize()
 {
     vs::Mat im = vs::loadImage("data/dog.jpg");
 
@@ -57,7 +57,7 @@ void test_multiple_resize()
     UTEST(vs::sameMat(im, gt));
 }
 
-void test_highpass_filter(){
+static void test_highpass_filter(){
     vs::Mat im = vs::loadImage("data/dog.jpg");
     vs::Mat f = vs::makeHighpassFilter();
     vs::Mat blur = vs::convolve(im, f, false);
@@ -66,7 +66,7 @@ void test_highpass_filter(){
     UTEST(vs::sameMat(blur, gt));
 }
 
-void test_emboss_filter(){
+static void test_emboss_filter(){
     vs::Mat im = vs::loadImage("data/dog.jpg");
     vs::Mat f = vs::makeEmbossFilter();
     vs::Mat blur = vs::convolve(im, f);
@@ -76,7 +76,7 @@ void test_emboss_filter(){
     UTEST(vs::sameMat(blur, gt));
 }
 
-void test_sharpen_filter(){
+static void test_sharpen_filter(){
     vs::Mat im = vs::loadImage("data/dog.jpg");
     vs::Mat f = vs::makeSharpenFilter();
     vs::Mat blur = vs::convolve(im, f);
@@ -86,7 +86,7 @@ void test_sharpen_filter(){
     UTEST(vs::sameMat(blur, gt));
 }
 
-void test_convolution(){
+static void test_convolution(){
 
     {
         vs::Mat filter(4, 4, 1);
@@ -112,7 +112,7 @@ void test_convolution(){
     UTEST(vs::sameMat(blur, gt));
 }
 
-void test_gaussian_filter() {
+static void test_gaussian_filter() {
     vs::Mat f = vs::makeGaussianFilter(7.0f);
 
     for(int i = 0; i < f.w * f.h * f.c; i++){
@@ -123,7 +123,7 @@ void test_gaussian_filter() {
     UTEST(vs::sameMat(f, gt));
 }
 
-void test_gaussian_blur() {
+static void test_gaussian_blur() {
     vs::Mat im = vs::loadImage("data/dog.jpg");
     vs::Mat f = vs::makeGaussianFilter(2.0f);
     //f.l1Normalize(); // blur should be normalized [0.0f, 1.0f] but the kernel is already normalized
@@ -162,7 +162,7 @@ void test_gaussian_blur() {
     UTEST(vs::sameMat(D, d));
 }
 
-void test_hybrid_image() {
+static void test_hybrid_image() {
     vs::Mat man = vs::loadImage("data/melisa.png", 3);
     vs::Mat woman = vs::loadImage("data/aria.png", 3);
     vs::Mat f = vs::makeGaussianFilter(2.0f);
@@ -175,7 +175,7 @@ void test_hybrid_image() {
     UTEST(vs::sameMat(reconstruct, gt));
 }
 
-void test_frequency_image(){
+static void test_frequency_image(){
     vs::Mat im = vs::loadImage("data/dog.jpg");
     vs::Mat f = vs::makeGaussianFilter(2.0f);
     vs::Mat lfreq = vs::convolve(im, f);
@@ -192,7 +192,7 @@ void test_frequency_image(){
     UTEST(vs::sameMat(reconstruct, im));
 }
 
-void test_gradients() {
+static void test_gradients() {
     vs::Mat gray;
     vs::Mat im = vs::loadImage("data/dog.jpg");
     rgb2gray(im, gray);
@@ -207,7 +207,7 @@ void test_gradients() {
     UTEST(vs::sameMat(gy, gy1));
 }
 
-void test_sobel() {
+static void test_sobel() {
     vs::Mat im = vs::loadImage("data/dog.jpg");
     vs::Mat mag;
     vs::Mat theta;
@@ -242,7 +242,7 @@ void test_sobel() {
     UTEST(vs::sameMat(theta, gt_theta));
 }
 
-void test_sobel_color() {
+static void test_sobel_color() {
     vs::Mat im = vs::loadImage("data/dog.jpg");
     vs::Mat mag, theta;
     vs::sobel(im, mag, theta);

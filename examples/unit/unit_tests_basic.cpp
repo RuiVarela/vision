@@ -9,7 +9,7 @@
     }\
 }\
 
-void test_get_pixel(){
+static void test_get_pixel(){
     vs::Mat im = vs::loadImage("test/dots.png");
     // Test within image
     UTEST(vs::equivalent(0.0f, im.get(0,0,0)));
@@ -23,7 +23,7 @@ void test_get_pixel(){
     UTEST(vs::equivalent(1.0f, im.getClamp(7,8,2)));
 }
 
-void test_set_pixel(){
+static void test_set_pixel(){
     vs::Mat im = vs::loadImage("test/dots.png");
     vs::Mat d = vs::Mat(4,2,4);
 
@@ -41,14 +41,14 @@ void test_set_pixel(){
     UTEST(vs::sameMat(im, d));
 }
 
-void test_copy()
+static void test_copy()
 {
     vs::Mat im = vs::loadImage("data/dog.jpg");
     vs::Mat c = im.clone();
     UTEST(vs::sameMat(im, c));
 }
 
-void test_shift()
+static void test_shift()
 {
     vs::Mat im = vs::loadImage("data/dog.jpg");
     vs::Mat c = im.clone();
@@ -60,7 +60,7 @@ void test_shift()
     UTEST(vs::equivalent(im.data[im.w*im.h+47] + .1f,  c.data[im.w*im.h + 47]));
 }
 
-void test_grayscale()
+static void test_grayscale()
 {
     vs::Mat im = vs::loadImage("data/colorbar.png");
     vs::Mat gray = vs::rgb2gray(im);
@@ -70,7 +70,7 @@ void test_grayscale()
 }
 
 
-void test_rgb_to_hsv()
+static void test_rgb_to_hsv()
 {
     vs::Mat im = vs::loadImage("data/dog.jpg");
     vs::rgb2hsvInplace(im);
@@ -80,7 +80,7 @@ void test_rgb_to_hsv()
     UTEST(vs::sameMat(im, hsv));
 }
 
-void test_hsv_to_rgb()
+static void test_hsv_to_rgb()
 {
     vs::Mat im = vs::loadImage("data/dog.jpg");
     vs::Mat c = im.clone();
