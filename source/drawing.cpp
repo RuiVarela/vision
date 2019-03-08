@@ -70,7 +70,7 @@ Mat drawMatches(const Mat &a, const Mat &b, const Matches &matches, int inliers)
     return both;
 }
 
-Mat drawInliers(const Mat &a, const Mat &b, const Mat &H, Matches &m, float thresh)
+Mat drawInliers(const Mat &a, const Mat &b, const Matd &H, Matches &m, float thresh)
 {
     int inliers = modelInliers(H, m, thresh);
     return drawMatches(a, b, m, inliers);

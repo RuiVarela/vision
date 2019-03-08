@@ -324,9 +324,10 @@ static matrix solve_system(matrix M, matrix b)
     }\
 }\
 
-static bool same(const vs::Mat &a, const matrix &b)
+template<typename T>
+static bool same(const vs::MatT<T> &a, const matrix &b)
 {
-    float const epsilon = 0.005f;
+    double const epsilon = 0.005;
 
     if (a.w != b.cols || a.h != b.rows || a.c != 1)
     {
@@ -336,7 +337,7 @@ static bool same(const vs::Mat &a, const matrix &b)
 
     for (int y = 0; y < a.h; ++y)
         for (int x = 0; x < a.w; ++x)
-            if (!vs::equivalent(a(y, x), float(b.data[y][x]), epsilon))
+            if (!vs::equivalent( double(a(y, x)), b.data[y][x], epsilon))
             {
                 printf("Mismatch (%d %d) %f %f\n", x, y, double(a(y, x)), b.data[y][x]);
                 return false;
@@ -555,9 +556,7 @@ static void test_proj_mult()
     }
 }
 
-static void test_homography() {
-
-
+static void test_matrix_homography() {
     {
         // test project a very simple point translation
         vs::Matches matches;
@@ -584,7 +583,7 @@ static void test_homography() {
             current.q.y += 100.0f;
         }
 
-        vs::Mat H = vs::Mat::makeTranslation3x3(100.f, 100.f);
+        vs::Matd H = vs::Matd::makeTranslation3x3(100, 100);
         int inliers = vs::modelInliers(H, matches, 2.0f);
         UTEST(inliers == 4);
 
@@ -594,38 +593,38 @@ static void test_homography() {
         // system solve
         //
         size_t n = matches.size();
-        vs::Mat M(8, int(n * 2));
-        vs::Mat b(1, int(n * 2));
+        vs::Matd M(8, int(n * 2));
+        vs::Matd b(1, int(n * 2));
 
         // fill in the matrices M and b.
         for (size_t i = 0; i < n; ++i)
         {
-            float x = matches[i].p.x;
-            float xp = matches[i].q.x;
+            double x = double(matches[i].p.x);
+            double xp = double(matches[i].q.x);
 
-            float y = matches[i].p.y;
-            float yp = matches[i].q.y;
+            double y = double(matches[i].p.y);
+            double yp = double(matches[i].q.y);
 
             int r = int(i * 2);
             M(r, 0) = x;
             M(r, 1) = y;
-            M(r, 2) = 1.0f;
-            M(r, 3) = 0.0f;
-            M(r, 4) = 0.0f;
-            M(r, 5) = 0.0f;
+            M(r, 2) = 1;
+            M(r, 3) = 0;
+            M(r, 4) = 0;
+            M(r, 5) = 0;
             M(r, 6) = -x * xp;
-            M(r, 7) = -y * yp;
+            M(r, 7) = -y * xp;
             b(r, 0) = xp;
 
             r++;
 
-            M(r, 0) = 0.0f;
-            M(r, 1) = 0.0f;
-            M(r, 2) = 0.0f;
+            M(r, 0) = 0;
+            M(r, 1) = 0;
+            M(r, 2) = 0;
             M(r, 3) = x;
             M(r, 4) = y;
-            M(r, 5) = 1.0f;
-            M(r, 6) = -x * xp;
+            M(r, 5) = 1;
+            M(r, 6) = -x * yp;
             M(r, 7) = -y * yp;
             b(r, 0) = yp;
         }
@@ -643,52 +642,54 @@ static void test_homography() {
         UTEST(same(M, m1));
         UTEST(same(b, b1));
 
-
-
         matrix a1 = {0,0,nullptr};
-        vs::Mat a;
 
         matrix Mt1 = transpose_matrix(m1);
-        vs::Mat Mt = M.transpose();
+        vs::Matd Mt = M.transpose();
         UTEST(same(M, m1));
         UTEST(same(Mt, Mt1));
 
         matrix MtM1 = matrix_mult_matrix(Mt1, m1);
-        vs::Mat MtM = vs::Mat::mmult(Mt, M);
+        vs::Matd MtM = vs::Matd::mmult(Mt, M);
         UTEST(same(MtM, MtM1));
 
         matrix MtMinv1 = matrix_invert(MtM1);
-        vs::Mat MtMinv = MtM.invert();
+        vs::Matd MtMinv = MtM.invert();
         UTEST(same(MtMinv, MtMinv1));
 
         matrix Mdag1 = {0,0,nullptr};
         if(MtMinv1.data) {
             Mdag1 = matrix_mult_matrix(MtMinv1, Mt1);
+            vs::Matd Mdag = vs::Matd::mmult(MtMinv, Mt);
+            UTEST(same(Mdag, Mdag1));
+
             a1 = matrix_mult_matrix(Mdag1, b1);
+            vs::Matd a = vs::Matd::mmult(Mdag, b);
+            UTEST(same(a, a1));
+
+
+            vs::Matd H(3, 3);
+
+            H(0,0) = a(0,0);
+            H(0,1) = a(1,0);
+            H(0,2) = a(2,0);
+
+            H(1,0) = a(3,0);
+            H(1,1) = a(4,0);
+            H(1,2) = a(5,0);
+
+            H(2,0) = a(6,0);
+            H(2,1) = a(7,0);
+            H(2,2) = 1.0;
+
+            int inliers = vs::modelInliers(H, matches, 2.0f);
+            UTEST(inliers == 4);
         }
         free_matrix(Mt1); free_matrix(MtM1); free_matrix(MtMinv1); free_matrix(Mdag1);
 
-
-
-
-
-
-
-      /*  if(MtMinv.size() == 0)
-            return none;
-
-        Mat Mdag = Mat::mmult(MtMinv, Mt);
-        Mat a = Mat::mmult(Mdag, b);
- */
-
-
-
-
-
-
         {
             matrix a1 = solve_system(m1, b1);
-            vs::Mat a = vs::Mat::llsSolve(M, b);
+            vs::Matd a = vs::Matd::llsSolve(M, b);
             UTEST(same(a, a1));
         }
 
@@ -703,6 +704,6 @@ int unit_tests_matrix(int argc, char **argv)
     test_basics();
     test_invert();
     test_proj_mult();
-    test_homography();
+    test_matrix_homography();
     return 0;
 }

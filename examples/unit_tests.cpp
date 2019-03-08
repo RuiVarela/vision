@@ -10,11 +10,8 @@ int main(int argc, char **argv)
     std::cout << "unit tests starting" << std::endl;
     unit_tests_basic(argc, argv);
     unit_tests_filtering(argc, argv);
-    unit_tests_features(argc, argv);
     unit_tests_matrix(argc, argv);
-    std::cout << "missing test systemSolve" << std::endl;
-    std::cout << "review test_homography" << std::endl;
-
+    unit_tests_features(argc, argv);
     std::cout << "unit tests finished" << std::endl;
 
     return 0;

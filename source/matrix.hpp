@@ -20,6 +20,9 @@ public:
     int channelSize() const;
     MatT clone() const;
 
+    template<typename TO> void convert(MatT<T> const& in, MatT<TO>& out);
+    template<typename TO> MatT<TO> convert(MatT<T> const& in);
+
     // views
     // these are virtual view on a Mat data, they will point to the parent memory
     // thus they don't allocate new memory
@@ -105,6 +108,7 @@ public:
     static MatT llsSolve(MatT const& M, MatT const& b);
 
 
+
     int w;    // width
     int h;    // height
     int c;    // channels;
@@ -112,7 +116,6 @@ public:
 private:
     std::shared_ptr<T> shared_data;
 };
-
 
 
 using Mat = MatT<float>;
@@ -153,6 +156,21 @@ inline MatT<T> MatT<T>::clone() const
     MatT<T> output(w, h, c);
     memcpy(output.data, data, size_t(size()) * sizeof(T));
     return output;
+}
+
+template<typename T> template<typename TO>
+inline void MatT<T>::convert(MatT<T> const& in, MatT<TO>& out) {
+    out.reshape(in.w, in.h, in.c);
+    for (int i = 0; i != in.size(); ++i) {
+        out.data[i] = TO(in.data[i]);
+    }
+}
+
+template<typename T> template<typename TO>
+MatT<TO> MatT<T>::convert(MatT const& in) {
+    Matd out;
+    convert(in, out);
+    return out;
 }
 
 template<typename T>

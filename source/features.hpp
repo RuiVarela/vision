@@ -82,7 +82,7 @@ Matches matchDescriptors(Descriptors const& a, Descriptors const& b);
 // returns: number of inliers whose projected point falls within thresh of
 //          their match in the other image. Should also rearrange matches
 //          so that the inliers are first in the array. For drawing.
-int modelInliers(Mat const& H, Matches& m, float thresh);
+int modelInliers(Matd const& H, Matches& m, float thresh);
 
 // Randomly shuffle matches for RANSAC.
 // Fisher-Yate
@@ -93,7 +93,7 @@ void randomizeMatches(Matches& m);
 // Computes homography between two images given matching pixels.
 // match *matches: matching points between images.
 // returns: matrix representing homography H that maps image a to image b.
-Mat computeHomography(Matches const& matches);
+Matd computeHomography(Matches const& matches);
 
 // Perform RANdom SAmple Consensus to calculate homography for noisy matches.
 // match *m: set of matches.
@@ -101,13 +101,14 @@ Mat computeHomography(Matches const& matches);
 // int k: number of iterations to run.
 // int cutoff: inlier cutoff to exit early.
 // returns: matrix representing most common homography between matches.
-Mat RANSAC(Matches& m, float thresh, int k, int cutoff);
+Matd RANSAC(Matches& m, float thresh, int k, int cutoff);
 
 // Apply a projective transformation to a point.
 // matrix H: homography to project point.
 // point p: point to project.
 // returns: point projected using the homography.
 Point projectPoint(Mat const& H, Point const& p);
+Point projectPoint(Matd const& H, Point const& p);
 
 // Perform non-max supression on an image of feature responses.
 // image im: 1-channel image of feature responses.

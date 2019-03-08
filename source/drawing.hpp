@@ -37,7 +37,7 @@ Mat drawMatches(Mat const& a, Mat const& b, Matches const& matches, int inliers)
 // Draw the matches with inliers in green between two images.
 // image a, b: two images to match.
 // matches *
-Mat drawInliers(Mat const& a, Mat const& b, Mat const& H, Matches& m, float thresh);
+Mat drawInliers(Mat const& a, Mat const& b, Matd const& H, Matches& m, float thresh);
 
 // Find corners, match them, and draw them between two images.
 // image a, b: images to match.

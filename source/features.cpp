@@ -122,21 +122,31 @@ Matches matchDescriptors(const Descriptors &a, const Descriptors &b)
     return filtered;
 }
 
-Point projectPoint(const Mat &H, const Point &p)
-{
+template<typename T>
+static Point project(const MatT<T> &H, const Point &p) {
     assert(H.w == 3 && H.h == 3 && H.c == 1);
 
-    Mat pm(1, 3);
-    pm(0,0) = p.x;
-    pm(1,0) = p.y;
-    pm(2,0) = 1.0f;
+    MatT<T> pm(1, 3);
+    pm(0,0) = T(p.x);
+    pm(1,0) = T(p.y);
+    pm(2,0) = 1;
 
-    Mat projected = Mat::mmult(H, pm);
-    return Point(projected(0,0) / projected(2,0), 
-                 projected(1,0) / projected(2,0));
+    MatT<T> projected = MatT<T>::mmult(H, pm);
+    return Point(float(projected(0,0) / projected(2,0)),
+                 float(projected(1,0) / projected(2,0)));
 }
 
-int modelInliers(const Mat &H, Matches &m, float thresh)
+Point projectPoint(const Mat &H, const Point &p)
+{
+    return project(H, p);
+}
+
+Point projectPoint(const Matd &H, const Point &p)
+{
+    return project(H, p);
+}
+
+int modelInliers(const Matd &H, Matches &m, float thresh)
 {
     // count number of matches that are inliers
     // i.e. distance(H*p, q) < thresh
@@ -170,53 +180,53 @@ void randomizeMatches(Matches& m) {
 }
 
 //https://math.stackexchange.com/questions/494238/how-to-compute-homography-matrix-h-from-corresponding-points-2d-2d-planar-homog
-Mat computeHomography(Matches const &matches)
+Matd computeHomography(Matches const &matches)
 {
     size_t n = matches.size();
-    Mat M(8, int(n * 2));
-    Mat b(1, int(n * 2));
+    Matd M(8, int(n * 2));
+    Matd b(1, int(n * 2));
 
     // fill in the matrices M and b.
     for (size_t i = 0; i < n; ++i)
     {
-        float x = matches[i].p.x;
-        float xp = matches[i].q.x;
+        double x = double(matches[i].p.x);
+        double xp = double(matches[i].q.x);
 
-        float y = matches[i].p.y;
-        float yp = matches[i].q.y;
+        double y = double(matches[i].p.y);
+        double yp = double(matches[i].q.y);
 
         int r = int(i * 2);
         M(r, 0) = x;
         M(r, 1) = y;
-        M(r, 2) = 1.0f;
-        M(r, 3) = 0.0f;
-        M(r, 4) = 0.0f;
-        M(r, 5) = 0.0f;
+        M(r, 2) = 1;
+        M(r, 3) = 0;
+        M(r, 4) = 0;
+        M(r, 5) = 0;
         M(r, 6) = -x * xp;
-        M(r, 7) = -y * yp;
+        M(r, 7) = -y * xp;
         b(r, 0) = xp;
 
         r++;
 
-        M(r, 0) = 0.0f;
-        M(r, 1) = 0.0f;
-        M(r, 2) = 0.0f;
+        M(r, 0) = 0;
+        M(r, 1) = 0;
+        M(r, 2) = 0;
         M(r, 3) = x;
         M(r, 4) = y;
-        M(r, 5) = 1.0f;
-        M(r, 6) = -x * xp;
+        M(r, 5) = 1;
+        M(r, 6) = -x * yp;
         M(r, 7) = -y * yp;
         b(r, 0) = yp;
     }
 
-    Mat a = Mat::llsSolve(M, b);
+    Matd a = Matd::llsSolve(M, b);
 
     // If a solution can't be found, return empty matrix;
     if (a.size() == 0)
         return a;
 
     // fill in the homography H based on the result in a.
-    Mat H(3, 3);
+    Matd H(3, 3);
 
     H(0,0) = a(0,0); 
     H(0,1) = a(1,0); 
@@ -233,7 +243,7 @@ Mat computeHomography(Matches const &matches)
     return H;
 }
 
-Mat RANSAC(Matches &m, float thresh, int k, int cutoff)
+Matd RANSAC(Matches &m, float thresh, int k, int cutoff)
 {
     assert(m.size() > 4);
 
@@ -251,7 +261,7 @@ Mat RANSAC(Matches &m, float thresh, int k, int cutoff)
     //n – minimum number of data points required to estimate model parameters
     const int n = 4;
     int best = 0;
-    Mat Hb;
+    Matd Hb;
     Matches subset;
 
     int current_iteration = 0;
@@ -260,7 +270,7 @@ Mat RANSAC(Matches &m, float thresh, int k, int cutoff)
 
         randomizeMatches(m);
         subset.assign(m.begin(), m.begin() + n);
-        Mat H = computeHomography(subset);
+        Matd H = computeHomography(subset);
         if (H.size() == 0) {
             std::cerr << "Homography is empty" << std::endl;
             continue;
@@ -385,6 +395,7 @@ Descriptors harrisCornerDetector(Mat const &im, float sigma, float thresh, int n
 
     return d;
 }
+
 
 
 
