@@ -166,7 +166,7 @@ static void test_ransac() {
     vs::Mat b = vs::loadImage("data/Rainier2.png", 3);
 
     float sigma = 2.0;
-    int thresh = 50;
+    float thresh = 50.0f;
     int nms = 3;
 
     // Calculate corners and descriptors

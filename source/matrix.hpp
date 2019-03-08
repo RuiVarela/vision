@@ -593,7 +593,7 @@ inline MatT<T> MatT<T>::invert() const
         int index = -1;
         for (int i = k; i < c.h; ++i)
         {
-            T val = fabsf(c(i, k));
+            T val = T(fabs(c(i, k)));
             if (val > p)
             {
                 p = val;
