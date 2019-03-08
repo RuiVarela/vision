@@ -19,15 +19,16 @@ else
 endif
 
 SRCS=$(shell find ./source -name "*.cpp")
-SRCS+=$(shell find ./examples -name "*.cpp")
+SRCS+=$(shell find ./examples/unit -name "*.cpp")
+
 OBJS=$(subst .cpp,.o,$(SRCS))
 
 all: unit_tests panorama
 
-panorama: $(OBJS) ./panorama.cpp
+panorama: $(OBJS) ./examples/panorama.cpp
 	$(CXX) $(LDFLAGS) -o panorama $^ $(LDLIBS)
 
-unit_tests: $(OBJS) ./unit_tests.cpp
+unit_tests: $(OBJS) ./examples/unit_tests.cpp
 	$(CXX) $(LDFLAGS) -o unit_tests $^ $(LDLIBS)
 
 depend: .depend

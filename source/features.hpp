@@ -47,9 +47,8 @@ struct Descriptor
     // calculates the l1 distance on the floating point arrays.
     // Minkowski distance between two points of order 1
     // https://en.wikipedia.org/wiki/Minkowski_distance
-    // float *a, *b: arrays to compare.
-    // int n: number of values in each array.
-    // returns: l1 distance between arrays (sum of absolute differences).
+    // Descriptor *a, *b: to compare.
+    // returns: l1 distance between them (sum of absolute differences).
     static float distance(Descriptor const& a, Descriptor const& b);
 
   private:
@@ -72,8 +71,6 @@ using Matches = std::vector<Match>;
 
 // Finds best matches between descriptors of two images.
 // descriptor *a, *b: array of descriptors for pixels in two images.
-// int an, bn: number of descriptors in arrays a and b.
-// int *mn: pointer to number of matches found, to be filled in by function.
 // returns: best matches found. each descriptor in a should match with at most
 //          one other descriptor in b.
 Matches matchDescriptors(Descriptors const& a, Descriptors const& b);

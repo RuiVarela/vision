@@ -8,5 +8,5 @@ HEADERS += \
 
 SOURCES += \
         $$PWD\source\*.cpp \
-        $$PWD\examples\*.cpp \
-        $$PWD\unit_tests.cpp
+        $$PWD\examples\unit\*.cpp \
+        $$PWD\examples\unit_tests.cpp
