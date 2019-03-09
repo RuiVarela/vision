@@ -126,19 +126,19 @@ static void test_homography() {
         vs::Matches matches;
         vs::Match match;
 
-        match.p.x = 1.0f;
-        match.p.y = 1.0f;
+        match.p.x = 0.0f;
+        match.p.y = 0.0f;
         matches.push_back(match);
 
         match.p.x = 100.0f;
-        match.p.y = 1.0f;
+        match.p.y = 0.0f;
         matches.push_back(match);
 
         match.p.x = 100.0f;
         match.p.y = 20.0f;
         matches.push_back(match);
 
-        match.p.x = 1.0f;
+        match.p.x = 0.0f;
         match.p.y = 20.0f;
         matches.push_back(match);
 

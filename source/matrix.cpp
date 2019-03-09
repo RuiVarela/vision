@@ -3,10 +3,6 @@
 namespace vs
 {
 
-//
-// Implementation
-//
-
 template <typename T>
 MatT<T>::MatT()
     : w(0), h(0), c(0), data(nullptr)
@@ -108,6 +104,26 @@ MatT<T> &MatT<T>::fill(MatT<T> const &src, int src_c, int dst_c)
         data[dst_c * w * h + i] = src.data[src_c * w * h + i];
 
     return *this;
+}
+
+template <typename T>
+MatT<T> &MatT<T>::copy(MatT<T> const &src, int src_x, int src_y, int src_w, int src_h, int dst_x, int dst_y)
+{
+    assert(src_w >= 0 && src_h >= 0 && src_w <= (src.w - src_x)  && src_h <= (src.h - src_y));
+    assert(src_w <= (w - dst_x) && src_h <= (h - dst_y));
+
+    for (int k = 0; k < src.c; ++k)
+        for (int y = 0; y < src_h; ++y)
+            for (int x = 0; x < src_w; ++x)
+                set(dst_x + x, dst_y + y, k, src.get(src_x + x, src_y + y, k));
+
+    return *this;
+}
+
+template <typename T>
+MatT<T> &MatT<T>::copy(MatT<T> const &src, int dst_x, int dst_y)
+{
+    return copy(src, 0, 0, src.w, src.h, dst_x, dst_y);
 }
 
 template <typename T>

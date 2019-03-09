@@ -1,10 +1,25 @@
 #include "../source/vs.hpp"
 
+static float getMin(vs::Mat const &im, int px, int py, int c, int w)
+{
+    float v = std::numeric_limits<float>::max();
+
+    for (int dx = -w / 2; dx < (w + 1) / 2; ++dx)
+        for (int dy = -w / 2; dy < (w + 1) / 2; ++dy)
+        {
+            float current = im.getClamp(px + dx, py + dy, c);
+            if (current < v)
+                v = current;
+        }
+
+    return v;
+}
+
 // Stitches two images together using a projective transformation.
 // image a, b: images to stitch.
 // matrix H: homography from image a coordinates to image b coordinates.
 // returns: combined image stitched together.
-vs::Mat combine_images(vs::Mat const &a, vs::Mat const &b, vs::Matd const &H)
+static vs::Mat combine_images(vs::Mat const &a, vs::Mat const &b, vs::Matd const &H)
 {
     vs::Matd Hinv = H.invert();
 
@@ -27,33 +42,32 @@ vs::Mat combine_images(vs::Mat const &a, vs::Mat const &b, vs::Matd const &H)
     int w = vs::maximum(a.w, int(botright.x)) - dx;
     int h = vs::maximum(a.h, int(botright.y)) - dy;
 
-    // Can disable this if you are making very big panoramas.
-    // Usually this means there was an error in calculating H.
-    if (w > 7000 || h > 7000)
-    {
-        fprintf(stderr, "output too big, stopping\n");
-        return a;
-    }
-
     vs::Mat c(w, h, a.c);
 
     // Paste image a into the new image offset by dx and dy.
-    for (int k = 0; k < a.c; ++k)
-    {
-        for (int j = 0; j < a.h; ++j)
-        {
-            for (int i = 0; i < a.w; ++i)
-            {
-                // TODO: fill in.
-            }
-        }
-    }
+    c.copy(a, -dx, -dy);
 
-    // TODO: Paste in image b as well.
+    // Paste in image b as well.
     // You should loop over some points in the new image (which? all?)
     // and see if their projection from a coordinates to b coordinates falls
     // inside of the bounds of image b. If so, use bilinear interpolation to
     // estimate the value of b at that projection, then fill in image c.
+    for (int k = 0; k < b.c; ++k)
+        for (int y = topleft.y; y < int(botright.y); ++y)
+            for (int x = topleft.x; x < int(botright.x); ++x)
+            {
+                vs::Point p = vs::projectPoint(H, vs::Point(x, y));
+                if (p.x >= 0.0f && p.x < b.w && p.y >= 0.0f && p.y < b.h)
+                {
+
+                    // this is because of the cylinder black borders
+                    if (vs::equivalent(getMin(b, p.x, p.y, k, 3), 0.0f))
+                        continue;
+
+                    float value = vs::interpolateBL(b, p.x, p.y, k);
+                    c.set(x - dx, y - dy, k, value);
+                }
+            }
 
     return c;
 }
@@ -66,7 +80,7 @@ vs::Mat combine_images(vs::Mat const &a, vs::Mat const &b, vs::Matd const &H)
 // float inlier_thresh: threshold for RANSAC inliers. Typical: 2-5
 // int iters: number of RANSAC iterations. Typical: 1,000-50,000
 // int cutoff: RANSAC inlier cutoff. Typical: 10-100
-vs::Mat panorama_image(vs::Mat &a, vs::Mat &b, float sigma, float thresh, int nms, float inlier_thresh, int iters, int cutoff)
+static vs::Mat panorama_image(vs::Mat &a, vs::Mat &b, float sigma, float thresh, int nms, float inlier_thresh, int iters, int cutoff)
 {
     srand(10);
     // Calculate corners and descriptors
@@ -79,7 +93,12 @@ vs::Mat panorama_image(vs::Mat &a, vs::Mat &b, float sigma, float thresh, int nm
     // Run RANSAC to find the homography
     vs::Matd H = RANSAC(m, inlier_thresh, iters, cutoff);
 
-    if (1)
+    if (H.size() == 0)
+    {
+        std::cout << "Unable to find homography" << std::endl;
+    }
+
+    if (false)
     {
         // Mark corners and matches between images
         vs::markCorners(a, ad);
@@ -89,23 +108,18 @@ vs::Mat panorama_image(vs::Mat &a, vs::Mat &b, float sigma, float thresh, int nm
     }
 
     // Stitch the images together with the homography
-    vs::Mat comb = combine_images(a, b, H);
-    return comb;
+    return combine_images(a, b, H);
 }
 
-// Project an image onto a cylinder.
-// image im: image to project.
-// float f: focal length used to take image (in pixels).
-// returns: image projected onto cylinder, then flattened.
-vs::Mat cylindrical_project(vs::Mat const &im, float f)
-{
-    //TODO: project image onto a cylinder
-    vs::Mat c = im.clone();
-    return c;
-}
-
+//
+// ./panorama draw_corners img ./data/Rainier1.png img
+// ./panorama draw_matches img ./data/Rainier1.png img ./data/Rainier2.png
+// ./panorama img ./data/Rainier1.png img ./data/Rainier2.png
+// ./panorama thresh 10 img ./data/Rainier1.png img ./data/Rainier2.png img ./data/Rainier5.png img ./data/Rainier6.png img ./data/Rainier3.png img ./data/Rainier4.png
+// ./panorama cylindrical 1200 thresh 2 inlier_thresh 3 iters 50000 img ./data/field5.jpg img ./data/field6.jpg img ./data/field7.jpg img ./data/field8.jpg img ./data/field4.jpg img ./data/field3.jpg
 int main(int argc, char **argv)
 {
+    float cylindrical = vs::findArgFloat(argc, argv, "cylindrical", 0.0f);
     float sigma = vs::findArgFloat(argc, argv, "sigma", 2.0f);
     float thresh = vs::findArgFloat(argc, argv, "thresh", 50.0f);
     int nms = vs::findArgInt(argc, argv, "nms", 3);
@@ -130,8 +144,9 @@ int main(int argc, char **argv)
         }
 
         vs::Mat a = vs::loadImage(inputs[0]);
-        vs::drawHarrisCorners(a,sigma, thresh, nms);
+        vs::drawHarrisCorners(a, sigma, thresh, nms);
         vs::saveImage("generated.png", a);
+        return 0;
     }
     else if (vs::findArg(argc, argv, "draw_matches"))
     {
@@ -144,12 +159,30 @@ int main(int argc, char **argv)
         vs::Mat a = vs::loadImage(inputs[0]);
         vs::Mat b = vs::loadImage(inputs[1]);
         vs::Mat out = vs::drawMatches(a, b, sigma, thresh, nms);
-        vs::saveImage("generated.png", a);
+        vs::saveImage("generated.png", out);
+        return 0;
     }
-    else if (!vs::findArg(argc, argv, "panorama"))
+
+    if (inputs.size() < 2)
     {
-        std::cout << "Unknown command" << std::endl;
+        std::cout << "Insuficient images provided. use img param" << std::endl;
         return -1;
+    }
+
+    vs::Mat current = vs::loadImage(inputs[0], 3);
+    if (cylindrical > 0.0)
+        current = vs::cylindricalProject(current, cylindrical);
+
+    for (size_t i = 1; i != inputs.size(); ++i)
+    {
+        std::cout << "Merging " << inputs[i] << std::endl;
+        vs::Mat next = vs::loadImage(inputs[i], 3);
+
+        if (cylindrical > 0.0)
+            next = vs::cylindricalProject(next, cylindrical);
+
+        current = panorama_image(current, next, sigma, thresh, nms, inlier_thresh, iters, cutoff);
+        vs::saveImage("generated.png", current);
     }
 
     return 0;

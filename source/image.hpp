@@ -25,7 +25,11 @@ void hsv2rgb(Mat const& src, Mat &dst);
 Mat hsv2rgb(Mat const& src);
 void hsv2rgbInplace(Mat &inplace);
 
+float interpolateNN(Mat const& im, float x, float y, int c);
+float interpolateBL(Mat const& im, float x, float y, int c);
 void resize(Mat const& src, Mat &dst, int nw, int nh, ResizeMode const mode = Bilinear);
 Mat resize(Mat const& src, int nw, int nh, ResizeMode const mode = Bilinear);
+
+vs::Mat cylindricalProject(vs::Mat const &im, float f);
 
 } // namespace vs

@@ -33,6 +33,10 @@ public:
     MatT &fill(T v); // fills all channels with v value
     MatT &fill(MatT const& src, int src_c, int dst_c); // fills a channel with values from another mat
 
+    // copy from
+    MatT &copy(MatT const& src, int src_x, int src_y, int src_w, int src_h, int dst_x, int dst_y);
+    MatT &copy(MatT const& src, int dst_x, int dst_y); 
+
     // channel values get/set
     T get(int x, int y = 0, int c = 0) const;
     T getClamp(int x, int y, int c) const;
@@ -72,6 +76,7 @@ public:
     MatT &l1Normalize(int c);
     MatT &l1Normalize();
 
+    // normalizes using (min-max normalization) https://en.wikipedia.org/wiki/Feature_scaling
     MatT &featureNormalize(int c);
     MatT &featureNormalize();
 

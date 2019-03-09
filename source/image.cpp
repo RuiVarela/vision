@@ -219,15 +219,14 @@ void hsv2rgbInplace(Mat &inplace)
     hsv2rgb(inplace, inplace);
 }
 
-float nn_interpolate(Mat const& im, float x, float y, int c) {
-
+float interpolateNN(Mat const& im, float x, float y, int c)
+ {
     const int ix = int(floorf(x));
     const int iy = int(floorf(y));
-
     return im.get(ix, iy, c);
 }
 
-float bilinear_interpolate(Mat const& im, float x, float y, int c)
+float interpolateBL(Mat const& im, float x, float y, int c)
 {
     // make sure we fall between the pixel center points
     x -= 0.5f;
@@ -257,7 +256,7 @@ void resize(Mat const& src, Mat &dst, int nw, int nh, const ResizeMode mode)
 {
     dst.reshape(nw, nh, src.c);
 
-    float (*interpolate)(Mat const&, float, float, int) = (mode == Bilinear) ? bilinear_interpolate : nn_interpolate;
+    float (*interpolate)(Mat const&, float, float, int) = (mode == Bilinear) ? interpolateBL : interpolateNN;
 
     float x_ratio = float(src.w) / float(dst.w);
     float y_ratio = float(src.h) / float(dst.h);
@@ -282,6 +281,38 @@ Mat resize(Mat const& src, int nw, int nh, const ResizeMode mode)
     Mat dst;
     resize(src, dst, nw, nh, mode);
     return dst;
+}
+
+vs::Mat cylindricalProject(vs::Mat const &im, float f)
+{
+    vs::Mat out(im.w, im.h, im.c);
+
+    float center_x = out.w / 2.0f;
+    float center_y = out.h / 2.0f;
+
+    for (int k = 0; k < out.c; ++k)
+        for (int y = 0; y < out.h; ++y)
+            for (int x = 0; x < out.w; ++x)
+            {
+                // calculate angle and height
+                float angle = (x - center_x) / f;
+                float height = (y - center_y) / f;
+
+                // find unit cylindrical coords
+                float cylinder_x = sin(angle);
+                float cylinder_y = height;
+                float cylinder_z = cos(angle);
+
+                // project to image plane
+                float px = f * cylinder_x / cylinder_z + center_x;
+                float py = f * cylinder_y / cylinder_z + center_y;
+
+                if (px >= 0 && px < im.w && py >= 0 && py < im.h) {
+                    out.set(x, y, k, im.get(px, py, k));
+                }
+            }
+
+    return out;
 }
 
 } // namespace vs

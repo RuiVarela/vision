@@ -10,7 +10,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/panorama",
-            "args": ["draw_corners", "img", "data/Rainier1.png"],
+            "args": ["img", "data/helens1.jpg", "img", "data/helens2.jpg"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
