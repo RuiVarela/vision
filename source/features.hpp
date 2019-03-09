@@ -36,19 +36,11 @@ struct Descriptor
     void reshape(int size);
 
     // Create a feature descriptor for an index in an image.
-    // very simple descriptor : its just a patch of neighbors pixels with the central one subtracted
-    // to compensate some for exposure/lighting changes.
+    // very simple descriptor : its just a patch of neighbors pixels
     // image im: source image.
     // int i: index in image for the pixel we want to describe.
     // returns: descriptor for that index.
     static Descriptor describe(Mat const&im, int i);
-
-    // Calculates L1 distance between to Descriptors
-    // calculates the l1 distance on the floating point arrays.
-    // Minkowski distance between two points of order 1
-    // https://en.wikipedia.org/wiki/Minkowski_distance
-    // Descriptor *a, *b: to compare.
-    // returns: l1 distance between them (sum of absolute differences).
     static float distance(Descriptor const& a, Descriptor const& b);
 
   private:
@@ -127,12 +119,17 @@ void harrisStructureMatrix(Mat const& im, Mat& S,float sigma);
 // image r: output - a response map of cornerness calculations.
 void harrisCornernessResponse(Mat const& S, Mat& R);
 
+// Estimate the cornerness of each pixel given a structure matrix S.
+// image S: structure matrix for an image.
+// image r: output - a response map of cornerness calculations.
+void shiTomasiCornernessResponse(Mat const& S, Mat& R);
+
 // Perform harris corner detection and extract features from the corners.
 // image im: input image.
 // float sigma: std. dev for harris.
 // float thresh: threshold for cornerness.
 // int nms: distance to look for local-maxes in response map.
-// int *n: pointer to number of corners detected, should fill in.
+// shi_tomasi : use shi tomasi if true
 // returns: array of descriptors of the corners in the image.
 Descriptors harrisCornerDetector(Mat const& im, float sigma, float thresh, int nms);
 

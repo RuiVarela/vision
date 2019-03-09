@@ -21,14 +21,13 @@ void markSpot(Mat &im, Point const &p)
 void markCorners(Mat &im, Descriptors const &d)
 {
     for (size_t i = 0; i < d.size(); ++i)
-    {
         markSpot(im, d[i].p);
-    }
 }
 
 void drawHarrisCorners(Mat &im, const float sigma, const float thresh, const int nms)
 {
     Descriptors d = harrisCornerDetector(im, sigma, thresh, nms);
+    //std::cout << "Descriptors: " << d.size() << std::endl;
     markCorners(im, d);
 }
 
@@ -81,6 +80,7 @@ Mat drawMatches(Mat &a, Mat &b, float sigma, float thresh, int nms)
     Descriptors ad = harrisCornerDetector(a, sigma, thresh, nms);
     Descriptors bd = harrisCornerDetector(b, sigma, thresh, nms);
     Matches m = matchDescriptors(ad, bd);
+    //std::cout << "Matched: " << m.size() << std::endl;
     markCorners(a, ad);
     markCorners(b, bd);
     return drawMatches(a, b, m, 0);

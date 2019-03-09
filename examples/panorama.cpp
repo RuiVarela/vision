@@ -42,6 +42,13 @@ static vs::Mat combine_images(vs::Mat const &a, vs::Mat const &b, vs::Matd const
     int w = vs::maximum(a.w, int(botright.x)) - dx;
     int h = vs::maximum(a.h, int(botright.y)) - dy;
 
+    // Can disable this if you are making very big panoramas.
+    // Usually this means there was an error in calculating H.
+    if(w > 7000 || h > 7000){
+        fprintf(stderr, "output too big, stopping\n");
+        return a.clone();
+    }
+
     vs::Mat c(w, h, a.c);
 
     // Paste image a into the new image offset by dx and dy.
@@ -80,7 +87,7 @@ static vs::Mat combine_images(vs::Mat const &a, vs::Mat const &b, vs::Matd const
 // float inlier_thresh: threshold for RANSAC inliers. Typical: 2-5
 // int iters: number of RANSAC iterations. Typical: 1,000-50,000
 // int cutoff: RANSAC inlier cutoff. Typical: 10-100
-static vs::Mat panorama_image(vs::Mat &a, vs::Mat &b, float sigma, float thresh, int nms, float inlier_thresh, int iters, int cutoff)
+static vs::Mat panorama_image(vs::Mat &a, vs::Mat &b, float sigma, float thresh, int nms, float inlier_thresh, int iters, int cutoff, bool no_match)
 {
     srand(10);
     // Calculate corners and descriptors
@@ -88,7 +95,26 @@ static vs::Mat panorama_image(vs::Mat &a, vs::Mat &b, float sigma, float thresh,
     vs::Descriptors bd = vs::harrisCornerDetector(b, sigma, thresh, nms);
 
     // Find matches
-    vs::Matches m = vs::matchDescriptors(ad, bd);
+    vs::Matches m;
+    if (no_match)
+    {
+        for (size_t a = 0; a != ad.size(); ++a)
+            for (size_t b = 0; b != bd.size(); ++b)
+            {
+                vs::Match current;
+                current.ai = int(a);
+                current.bi = int(b);
+                current.p = ad[size_t(current.ai)].p;
+                current.q = bd[size_t(current.bi)].p;
+                current.distance = 0;
+
+                m.push_back(current);
+            }
+    }
+    else
+    {
+        m = vs::matchDescriptors(ad, bd);
+    }
 
     // Run RANSAC to find the homography
     vs::Matd H = RANSAC(m, inlier_thresh, iters, cutoff);
@@ -116,16 +142,16 @@ static vs::Mat panorama_image(vs::Mat &a, vs::Mat &b, float sigma, float thresh,
 // ./panorama draw_matches img ./data/Rainier1.png img ./data/Rainier2.png
 // ./panorama img ./data/Rainier1.png img ./data/Rainier2.png
 // ./panorama thresh 10 img ./data/Rainier1.png img ./data/Rainier2.png img ./data/Rainier5.png img ./data/Rainier6.png img ./data/Rainier3.png img ./data/Rainier4.png
-// ./panorama cylindrical 1200 thresh 10 img ./data/Rainier1.png img ./data/Rainier2.png img ./data/Rainier5.png img ./data/Rainier6.png img ./data/Rainier3.png img ./data/Rainier4.png
-
+// ./panorama cylindrical 800 thresh 5 inlier_thresh 5 img ./data/Rainier1.png img ./data/Rainier2.png img ./data/Rainier6.png img ./data/Rainier3.png img ./data/Rainier4.png img ./data/Rainier5.png
 int main(int argc, char **argv)
 {
+    bool no_match = vs::findArg(argc, argv, "no_match");
     float cylindrical = vs::findArgFloat(argc, argv, "cylindrical", 0.0f);
     float sigma = vs::findArgFloat(argc, argv, "sigma", 2.0f);
     float thresh = vs::findArgFloat(argc, argv, "thresh", 50.0f);
     int nms = vs::findArgInt(argc, argv, "nms", 3);
     float inlier_thresh = vs::findArgFloat(argc, argv, "inlier_thresh", 2.0f);
-    int iters = vs::findArgInt(argc, argv, "iters", 10000);
+    int iters = vs::findArgInt(argc, argv, "iters", 50000);
     int cutoff = vs::findArgInt(argc, argv, "cutoff", 30);
 
     std::vector<std::string> inputs;
@@ -182,7 +208,7 @@ int main(int argc, char **argv)
         if (cylindrical > 0.0)
             next = vs::cylindricalProject(next, cylindrical);
 
-        current = panorama_image(current, next, sigma, thresh, nms, inlier_thresh, iters, cutoff);
+        current = panorama_image(current, next, sigma, thresh, nms, inlier_thresh, iters, cutoff, no_match);
         vs::saveImage("generated.png", current);
     }
 

@@ -41,15 +41,29 @@ Descriptor Descriptor::describe(const Mat &im, int i)
     d.p.y = float(y);
     d.reshape(w * w * im.c);
 
+    // float mean = 0.0f;
+    // for (int c = 0; c < im.c; ++c)
+    //     for (int dx = -w / 2; dx < (w + 1) / 2; ++dx)
+    //         for (int dy = -w / 2; dy < (w + 1) / 2; ++dy)
+    //             mean = im.getClamp(x + dx, y + dy, c);
+
+    // mean /= float(w * w * im.c);
+
+    // int count = 0;
+    // for (int c = 0; c < im.c; ++c)
+    //     for (int dx = -w / 2; dx < (w + 1) / 2; ++dx)
+    //         for (int dy = -w / 2; dy < (w + 1) / 2; ++dy)
+    //             d.data[count++] = mean - im.getClamp(x + dx, y + dy, c);
+
     int count = 0;
     // If you want you can experiment with other descriptors
     // This subtracts the central value from neighbors
     // to compensate some for exposure/lighting changes.
-    for(int c = 0; c < im.c; ++c){
+    for (int c = 0; c < im.c; ++c)
+    {
         float cval = im.get(x, y, c);
-
-        for(int dx = -w/2; dx < (w+1)/2; ++dx)
-            for(int dy = -w/2; dy < (w+1)/2; ++dy)
+        for (int dx = -w / 2; dx < (w + 1) / 2; ++dx)
+            for (int dy = -w / 2; dy < (w + 1) / 2; ++dy)
                 d.data[count++] = cval - im.getClamp(x + dx, y + dy, c);
     }
 
@@ -58,6 +72,13 @@ Descriptor Descriptor::describe(const Mat &im, int i)
 
 float Descriptor::distance(const Descriptor &a, const Descriptor &b)
 {
+
+        // Calculates L1 distance between to Descriptors
+    // calculates the l1 distance on the floating point arrays.
+    // Minkowski distance between two points of order 1
+    // https://en.wikipedia.org/wiki/Minkowski_distance
+    // Descriptor *a, *b: to compare.
+    // returns: l1 distance between them (sum of absolute differences).
     assert(a.n == b.n && a.n > 0);
 
     float sum = 0;
@@ -272,7 +293,7 @@ Matd RANSAC(Matches &m, float thresh, int k, int cutoff)
         subset.assign(m.begin(), m.begin() + n);
         Matd H = computeHomography(subset);
         if (H.size() == 0) {
-            std::cerr << "Homography is empty" << std::endl;
+            //std::cerr << "Homography is empty" << std::endl;
             continue;
         }
 
@@ -283,17 +304,19 @@ Matd RANSAC(Matches &m, float thresh, int k, int cutoff)
         subset.assign(m.begin(), m.begin() + inliers);
         H = computeHomography(subset);
         if (H.size() == 0) {
-            std::cerr << "Homography is empty" << std::endl;
+            std::cerr << "Homography is empty on full inliers" << std::endl;
             continue;
         }
 
-        best = modelInliers(H, m, thresh);
+        best = inliers;
         Hb = H;
 
         if (best > cutoff) {
             break;
         }
     }
+
+   // std::cout << "Matches: " << m.size() << " Inliers: " << best << " Iters: " << current_iteration<<std::endl;
 
     return Hb;
 }
@@ -370,37 +393,64 @@ void harrisCornernessResponse(Mat const &s, Mat &R)
 
         const float trace = xx + yy;
         const float det = xx * yy - xy * xy;
-
         R.data[i] = det - (alpha * trace * trace);
+    }
+}
+
+static float min_eigenvalue(float a, float b, float c, float d)
+{
+	float ev_one = (a + d)/2 + pow(((a + d) * (a + d))/4 - (a * d - b * c), 0.5);
+	float ev_two = (a + d)/2 - pow(((a + d) * (a + d))/4 - (a * d - b * c), 0.5);
+	if (ev_one >= ev_two)
+		return ev_two;
+	else
+		return ev_one;
+	
+}
+
+void shiTomasiCornernessResponse(Mat const &S, Mat &R)
+{
+    float multiplier = 9.0f; // try to match harris values for thresholds
+
+    R.reshape(S.w, S.h, 1);
+    for (int i = 0; i != S.w * S.h; ++i)
+    {
+        const float xx = S.data[S.w * S.h * 0 + i];
+        const float yy = S.data[S.w * S.h * 1 + i];
+        const float xy = S.data[S.w * S.h * 2 + i];
+
+        R.data[i] = min_eigenvalue(xx, xy, xy, yy) * multiplier;
     }
 }
 
 Descriptors harrisCornerDetector(Mat const &im, float sigma, float thresh, int nms)
 {
+    const bool shi_tomasi = true;
+
     Descriptors d;
     Mat S, R;
+
+    Mat gray = im;
+    if (gray.c > 1)
+        gray = vs::rgb2gray(gray);
 
     // Calculate structure matrix
     harrisStructureMatrix(im, S, sigma);
 
     // Estimate cornerness
-    harrisCornernessResponse(S, R);
+    if (shi_tomasi)
+        shiTomasiCornernessResponse(S, R);
+    else
+        harrisCornernessResponse(S, R);
 
     // Run NMS on the responses
     nonMaxSupression(R, S, nms);
 
     for (int i = 0; i != S.w * S.h; ++i)
         if (S.data[i] > thresh)
-            d.push_back(Descriptor::describe(im, i));
+            d.push_back(Descriptor::describe(gray, i));
 
     return d;
 }
-
-
-
-
-
-
-
 
 } // namespace vs
