@@ -116,7 +116,8 @@ static vs::Mat panorama_image(vs::Mat &a, vs::Mat &b, float sigma, float thresh,
 // ./panorama draw_matches img ./data/Rainier1.png img ./data/Rainier2.png
 // ./panorama img ./data/Rainier1.png img ./data/Rainier2.png
 // ./panorama thresh 10 img ./data/Rainier1.png img ./data/Rainier2.png img ./data/Rainier5.png img ./data/Rainier6.png img ./data/Rainier3.png img ./data/Rainier4.png
-// ./panorama cylindrical 1200 thresh 2 inlier_thresh 3 iters 50000 img ./data/field5.jpg img ./data/field6.jpg img ./data/field7.jpg img ./data/field8.jpg img ./data/field4.jpg img ./data/field3.jpg
+// ./panorama cylindrical 1200 thresh 10 img ./data/Rainier1.png img ./data/Rainier2.png img ./data/Rainier5.png img ./data/Rainier6.png img ./data/Rainier3.png img ./data/Rainier4.png
+
 int main(int argc, char **argv)
 {
     float cylindrical = vs::findArgFloat(argc, argv, "cylindrical", 0.0f);
