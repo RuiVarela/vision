@@ -25,7 +25,7 @@ void makeIntegralImage(const Mat &im, Mat &out)
             }
 }
 
-void boxfilterIntegralImage(const Mat &im, int s, Mat &out)
+void boxfilterIntegralImage(const Mat &im, int smooth, Mat &out)
 {
     out.reshape(im.w, im.h, im.c);
 
@@ -39,34 +39,40 @@ void boxfilterIntegralImage(const Mat &im, int s, Mat &out)
             }
 }
 
-void timeStructureMatrix(const Mat &im, const Mat &prev, int s, Mat &S)
+void LucasKanade::timeStructureMatrix(const Mat &im, const Mat &prev, int smooth, Mat &S)
 {
-
     // returns: structure matrix. 1st channel is Ix^2, 2nd channel is Iy^2,
     //          3rd channel is IxIy, 4th channel is IxIt, 5th channel is IyIt.
 
-    /*
-    int i;
-    int converted = 0;
-    if(im.c == 3){
-        converted = 1;
-        im = rgb_to_grayscale(im);
-        prev = rgb_to_grayscale(prev);
+    S.reshape(im.w, im.h, 5);
+
+    m_I.reshape(im.w, im.h, 5);
+    Mat IxIx = m_I.channelView(0);
+    Mat IyIy = m_I.channelView(1);
+    Mat IxIy = m_I.channelView(2);
+    Mat IxIt = m_I.channelView(3);
+    Mat IyIt = m_I.channelView(4);
+    gradient(im, IxIx, IyIy);
+
+    float x, y, t;
+    for (int i = 0; i != im.size(); ++i)
+    {
+        x = IxIx.data[i];
+        y = IyIy.data[i];
+        t = im.data[i] - prev.data[i];
+
+        IxIy.data[i] = x * y;
+        IxIx.data[i] = x * x;
+        IyIy.data[i] = y * y;
+        IxIt.data[i] = x * t;
+        IyIt.data[i] = y * t;
     }
 
-    // TODO: calculate gradients, structure components, and smooth them
-
-
-
-
-    if(converted){
-        free_image(im); free_image(prev);
-    }
-    return S;
-    */
+    makeIntegralImage(m_I, m_Ii);
+    boxfilterIntegralImage(m_Ii, smooth, S);
 }
 
-void velocityImage(const Mat &S, int stride, Mat &v)
+void LucasKanade::velocityImage(const Mat &S, int stride, Mat &v)
 {
     v.reshape(S.w/stride, S.h/stride, 3);
     int i, j;
@@ -90,12 +96,22 @@ void velocityImage(const Mat &S, int stride, Mat &v)
     }
 }
 
-void opticalflow(const Mat &im, const Mat &prev, int smooth, int stride, Mat &vs)
+void LucasKanade::opticalflow(const Mat &im, const Mat &prev, int smooth, int stride, Mat &vs)
 {
-    Mat S, v;
-    timeStructureMatrix(im, prev, smooth, S);
-    velocityImage(S, stride, v);
+    assert(im.w == prev.w && im.h == prev.h);
 
+    if (im.c == 1) 
+        m_curr_gray = im;
+    else    
+        rgb2gray(im, m_curr_gray); 
+
+    if (prev.c == 1) 
+        m_prev_gray = prev;
+    else    
+        rgb2gray(prev, m_prev_gray);        
+    
+    timeStructureMatrix(m_curr_gray, m_prev_gray, smooth, m_S);
+    velocityImage(m_S, stride, v);
 
     v.constrain(6.0f);
     vs::smoothImage(v, vs, 2.0);

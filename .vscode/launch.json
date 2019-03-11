@@ -9,7 +9,7 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/panorama",
+            "program": "${workspaceFolder}/unit_tests",
             "args": ["no_match", "thresh", "20",  "img", "data/field6.jpg", "img", "data/field7.jpg"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

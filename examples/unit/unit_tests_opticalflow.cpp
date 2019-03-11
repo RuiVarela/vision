@@ -1,6 +1,7 @@
 #include "../../source/vs.hpp"
 
 // https://github.com/pjreddie/vision-hw3
+
 static void test_integral_images() {
     //https://en.wikipedia.org/wiki/Summed-area_table
 
@@ -99,11 +100,12 @@ static void test_integral_images() {
 
 static void test_images()
 {
+    vs::LucasKanade lk;
 
     vs::Mat a = vs::loadImage("data/dog_a.jpg");
     vs::Mat b = vs::loadImage("data/dog_b.jpg");
     vs::Mat flow;
-    vs::opticalflow(b, a, 15, 8, flow);
+    lk.opticalflow(b, a, 15, 8, flow);
     //draw_flow(a, flow, 8)
     //save_image(a, "lines")
 
