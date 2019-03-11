@@ -16,7 +16,7 @@ std::string toNativeSeparators(const std::string &path)
     return output;
 }
 
-void del_arg(int argc, char **argv, int index)
+static void del_arg(int argc, char **argv, int index)
 {
     int i;
     for(i = index; i < argc-1; ++i) 
@@ -139,12 +139,103 @@ bool sameMat(const Mat &a, const Mat &b)
                 int index = a.w * a.h * k + a.w * y + x;
                 if (!equivalent(a.data[index], b.data[index], epsilon))
                 {
-                    printf("Mismatch (%d %d %d) %f %f\n", x, y, k, a.data[index], b.data[index]);
+                    printf("Mismatch (%d %d %d) %f %f\n", x, y, k, double(a.data[index]), double(b.data[index]));
                     return false;
                 }
             }
 
     return true;
 }
+
+template <typename T>
+inline std::ostream &print(MatT<T> const &m, std::ostream &out, int max_cols, int max_rows)
+{
+    out << "Header " << m.w << "x" << m.h << "x" << m.c << std::endl;
+    out << std::fixed << std::setprecision(3);
+
+    if (max_cols < 0)
+        max_cols = m.w;
+
+    if (max_rows < 0)
+        max_rows = m.h;
+
+    if (max_rows > 0 && max_rows > 0)
+        for (int i = 0; i < m.c; ++i)
+        {
+            out << "channel " << i << std::endl;
+
+            for (int j = 0; j < m.h; ++j)
+            {
+                if (j > max_rows)
+                {
+                    out << "... (" << m.h - j << ")" << std::endl;
+                    break;
+                }
+
+                for (int k = 0; k < m.w; ++k)
+                {
+                    if (k > max_cols)
+                    {
+                        out << " ... (" << m.w - k << ")";
+                        break;
+                    }
+
+                    if (k > 0)
+                        out << ", ";
+
+                    out << std::fixed << m.data[i * m.h * m.w + j * m.w + k];
+                }
+                out << std::endl;
+            }
+        }
+
+    return out;
+}
+
+#ifdef VS_USE_OPENCV
+void showMat(Mat const &a, std::string const& name, int ms) {
+}
+
+int openStream(std::string const& name) {
+    return -1;
+}
+
+void closeStream(int const id) {
+
+}
+
+void readStream(int const id, vs::Mat& out) {
+
+}
+#else
+void showMat(Mat const &a, std::string const& name, int ms) {
+    bool opencv_installed = false;
+    assert(opencv_installed);
+}
+
+int openStream(std::string const& name) {
+    bool opencv_installed = false;
+    assert(opencv_installed);
+    return -1;
+}
+
+void closeStream(int const id) {
+    bool opencv_installed = false;
+    assert(opencv_installed);
+}
+
+void readStream(int const id, vs::Mat& out) {
+    bool opencv_installed = false;
+    assert(opencv_installed);
+}
+#endif // VS_USE_OPENCV
+
+
+
+//
+// force template instantiation
+//
+template std::ostream &print(MatT<float> const &m, std::ostream &out, int max_cols, int max_rows);
+template std::ostream &print(MatT<double> const &m, std::ostream &out, int max_cols, int max_rows);
 
 } // namespace vs

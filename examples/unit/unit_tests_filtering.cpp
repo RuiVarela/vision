@@ -2,13 +2,6 @@
 
 // https://github.com/pjreddie/vision-hw1
 
-#define UTEST(EX) \
-{\
-    if(!(EX)) {\
-        fprintf(stderr, "failed: [%s] testing [%s] in %s, line %d\n", __FUNCTION__, #EX, __FILE__, __LINE__);\
-    }\
-}\
-
 static void test_nn_resize()
 {
     {

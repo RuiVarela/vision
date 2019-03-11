@@ -129,8 +129,8 @@ void shiTomasiCornernessResponse(Mat const& S, Mat& R);
 // float sigma: std. dev for harris.
 // float thresh: threshold for cornerness.
 // int nms: distance to look for local-maxes in response map.
-// shi_tomasi : use shi tomasi if true
+// shi_tomasi : use shi tomasi variant
 // returns: array of descriptors of the corners in the image.
-Descriptors harrisCornerDetector(Mat const& im, float sigma, float thresh, int nms);
+Descriptors harrisCornerDetector(Mat const& im, float sigma, float thresh, int nms, bool shi_tomasi = true);
 
 } // namespace vs

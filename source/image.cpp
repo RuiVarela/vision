@@ -308,7 +308,7 @@ vs::Mat cylindricalProject(vs::Mat const &im, float f)
                 float py = f * cylinder_y / cylinder_z + center_y;
 
                 if (px >= 0 && px < im.w && py >= 0 && py < im.h) {
-                    out.set(x, y, k, im.get(px, py, k));
+                    out.set(x, y, k, im.get(int(px), int(py), k));
                 }
             }
 

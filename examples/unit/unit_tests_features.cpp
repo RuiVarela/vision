@@ -2,14 +2,6 @@
 
 // https://github.com/pjreddie/vision-hw2
 
-#define UTEST(EX) \
-{\
-    if(!(EX)) {\
-        fprintf(stderr, "failed: [%s] testing [%s] in %s, line %d\n", __FUNCTION__, #EX, __FILE__, __LINE__);\
-    }\
-}\
-
-
 static void test_filter(){
     vs::Mat im = vs::loadImage("data/Rainier1.png", 3);
 
@@ -147,7 +139,6 @@ static void test_homography() {
             current.q.x += 100.0f;
             current.q.y += 100.0f;
         }
-
 
         vs::Matd H = computeHomography(matches);
         assert(H.size() > 0);

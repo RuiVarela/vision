@@ -19,3 +19,4 @@
 #include "util.hpp"
 #include "features.hpp"
 #include "drawing.hpp"
+#include "opticalflow.hpp"

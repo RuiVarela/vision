@@ -397,6 +397,14 @@ MatT<T> &MatT<T>::clamp()
     return clamp(0, 1);
 }
 
+
+template<typename T>
+MatT<T> &MatT<T>::constrain(T value)
+{
+    return clamp(-value, value);
+}
+
+
 template <typename T>
 int MatT<T>::size() const
 {
@@ -599,7 +607,7 @@ void MatT<T>::vmult(const MatT<T> &a, const MatT<T> &b, MatT<T> &p)
 {
     assert(b.size() == a.w);
 
-    p.reshape(1, a.h, 1);
+    p.reshape(b.w, a.h, 1);
     p.zero();
 
     for (int i = 0; i < a.h; ++i)

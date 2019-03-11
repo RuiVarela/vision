@@ -41,20 +41,20 @@ Descriptor Descriptor::describe(const Mat &im, int i)
     d.p.y = float(y);
     d.reshape(w * w * im.c);
 
-    // float mean = 0.0f;
-    // for (int c = 0; c < im.c; ++c)
-    //     for (int dx = -w / 2; dx < (w + 1) / 2; ++dx)
-    //         for (int dy = -w / 2; dy < (w + 1) / 2; ++dy)
-    //             mean = im.getClamp(x + dx, y + dy, c);
+     float mean = 0.0f;
+     for (int c = 0; c < im.c; ++c)
+         for (int dx = -w / 2; dx < (w + 1) / 2; ++dx)
+             for (int dy = -w / 2; dy < (w + 1) / 2; ++dy)
+                 mean = im.getClamp(x + dx, y + dy, c);
 
-    // mean /= float(w * w * im.c);
+     mean /= float(w * w * im.c);
 
-    // int count = 0;
-    // for (int c = 0; c < im.c; ++c)
-    //     for (int dx = -w / 2; dx < (w + 1) / 2; ++dx)
-    //         for (int dy = -w / 2; dy < (w + 1) / 2; ++dy)
-    //             d.data[count++] = mean - im.getClamp(x + dx, y + dy, c);
-
+     int count = 0;
+     for (int c = 0; c < im.c; ++c)
+         for (int dx = -w / 2; dx < (w + 1) / 2; ++dx)
+             for (int dy = -w / 2; dy < (w + 1) / 2; ++dy)
+                 d.data[count++] = mean - im.getClamp(x + dx, y + dy, c);
+/*
     int count = 0;
     // If you want you can experiment with other descriptors
     // This subtracts the central value from neighbors
@@ -66,14 +66,14 @@ Descriptor Descriptor::describe(const Mat &im, int i)
             for (int dy = -w / 2; dy < (w + 1) / 2; ++dy)
                 d.data[count++] = cval - im.getClamp(x + dx, y + dy, c);
     }
-
+*/
     return d;
 }
 
 float Descriptor::distance(const Descriptor &a, const Descriptor &b)
 {
 
-        // Calculates L1 distance between to Descriptors
+    // Calculates L1 distance between to Descriptors
     // calculates the l1 distance on the floating point arrays.
     // Minkowski distance between two points of order 1
     // https://en.wikipedia.org/wiki/Minkowski_distance
@@ -399,13 +399,9 @@ void harrisCornernessResponse(Mat const &s, Mat &R)
 
 static float min_eigenvalue(float a, float b, float c, float d)
 {
-	float ev_one = (a + d)/2 + pow(((a + d) * (a + d))/4 - (a * d - b * c), 0.5);
-	float ev_two = (a + d)/2 - pow(((a + d) * (a + d))/4 - (a * d - b * c), 0.5);
-	if (ev_one >= ev_two)
-		return ev_two;
-	else
-		return ev_one;
-	
+    float ev_one = (a + d)/2 + powf(((a + d) * (a + d))/4 - (a * d - b * c), 0.5);
+    float ev_two = (a + d)/2 - powf(((a + d) * (a + d))/4 - (a * d - b * c), 0.5);
+    return (ev_one >= ev_two) ? ev_two : ev_one;
 }
 
 void shiTomasiCornernessResponse(Mat const &S, Mat &R)
@@ -423,10 +419,8 @@ void shiTomasiCornernessResponse(Mat const &S, Mat &R)
     }
 }
 
-Descriptors harrisCornerDetector(Mat const &im, float sigma, float thresh, int nms)
+Descriptors harrisCornerDetector(Mat const &im, float sigma, float thresh, int nms, bool shi_tomasi)
 {
-    const bool shi_tomasi = true;
-
     Descriptors d;
     Mat S, R;
 

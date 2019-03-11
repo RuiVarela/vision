@@ -220,18 +220,9 @@ static matrix solve_system(matrix M, matrix b)
 }
 
 
-
 //
 // Test Start
 //
-
-
-#define UTEST(EX) \
-{\
-    if(!(EX)) {\
-        fprintf(stderr, "failed: [%s] testing [%s] in %s, line %d\n", __FUNCTION__, #EX, __FILE__, __LINE__);\
-    }\
-}\
 
 template<typename T>
 static bool same(const vs::MatT<T> &a, const matrix &b)

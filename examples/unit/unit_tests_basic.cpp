@@ -2,13 +2,6 @@
 
 // https://github.com/pjreddie/vision-hw0
 
-#define UTEST(EX) \
-{\
-    if(!(EX)) {\
-        fprintf(stderr, "failed: [%s] testing [%s] in %s, line %d\n", __FUNCTION__, #EX, __FILE__, __LINE__);\
-    }\
-}\
-
 static void test_get_pixel(){
     vs::Mat im = vs::loadImage("test/dots.png");
     // Test within image

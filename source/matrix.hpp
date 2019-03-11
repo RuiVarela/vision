@@ -48,6 +48,7 @@ public:
     MatT &clamp(int c, T min, T max);
     MatT &clamp(T min, T max);
     MatT &clamp(); // 0.0f, 1.0f
+    MatT &constrain(T value); //  each pixel will be in range [-v, v]
 
     // Add a scalar value
     MatT &add(int c, T v);
