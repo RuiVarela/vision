@@ -28,6 +28,15 @@ void makeIntegralImage(const Mat &im, Mat &out)
 void boxfilterIntegralImage(const Mat &im, int s, Mat &out)
 {
     out.reshape(im.w, im.h, im.c);
+
+    out.reshape(im.w, im.h, im.c);
+    for (int k = 0; k != im.c; ++k)
+        for (int y = 0; y != im.h; ++y)
+            for (int x = 0; x != im.w; ++x)
+            {
+
+
+            }
 }
 
 void timeStructureMatrix(const Mat &im, const Mat &prev, int s, Mat &S)
