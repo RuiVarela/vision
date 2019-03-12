@@ -399,8 +399,9 @@ void harrisCornernessResponse(Mat const &s, Mat &R)
 
 static float min_eigenvalue(float a, float b, float c, float d)
 {
-    float ev_one = (a + d)/2 + powf(((a + d) * (a + d))/4 - (a * d - b * c), 0.5);
-    float ev_two = (a + d)/2 - powf(((a + d) * (a + d))/4 - (a * d - b * c), 0.5);
+    float common = powf(((a + d) * (a + d))/4 - (a * d - b * c), 0.5);
+    float ev_one = (a + d)/2 + common;
+    float ev_two = (a + d)/2 - common;
     return (ev_one >= ev_two) ? ev_two : ev_one;
 }
 

@@ -98,6 +98,20 @@ static void test_integral_images() {
     UTEST(vs::sameMat(ai, i));
 }
 
+static void test_box_filter() {
+    vs::Mat im = vs::loadImage("data/dog.jpg");
+    vs::Mat imi;
+    vs::makeIntegralImage(im, imi);
+
+    vs::Mat blur;
+    vs::boxfilterIntegralImage(imi, 7, blur);
+    blur.clamp();
+    //vs::saveImage("dog-box7_integral.png", blur);
+
+    vs::Mat gt = vs::loadImage("test/dog-box7_integral.png");
+    UTEST(vs::sameMat(blur, gt));
+}
+
 static void test_images()
 {
     vs::LucasKanade lk;
@@ -117,6 +131,7 @@ static void test_images()
 int unit_tests_opticalflow(int argc, char **argv)
 {
     test_integral_images();
+    test_box_filter();
     test_images();
     return 0;
 }

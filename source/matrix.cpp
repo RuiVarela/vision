@@ -129,7 +129,14 @@ MatT<T> &MatT<T>::copy(MatT<T> const &src, int dst_x, int dst_y)
 template <typename T>
 T MatT<T>::get(int x, int y, int c) const
 {
-    assert(x >= 0 && x < this->w && y >= 0 && y < this->h && c >= 0 && c < this->c);
+    assert(x >= 0);
+    assert(x < this->w);
+
+    assert(y >= 0);
+    assert(y < this->h);
+
+    assert(c >= 0);
+    assert(c < this->c);
     return data[c * h * w + y * w + x];
 }
 

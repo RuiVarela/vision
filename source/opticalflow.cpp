@@ -6,6 +6,7 @@ namespace vs
 void makeIntegralImage(const Mat &im, Mat &out)
 {
     out.reshape(im.w, im.h, im.c);
+
     for (int k = 0; k != im.c; ++k)
         for (int y = 0; y != im.h; ++y)
             for (int x = 0; x != im.w; ++x)
@@ -29,13 +30,29 @@ void boxfilterIntegralImage(const Mat &im, int smooth, Mat &out)
 {
     out.reshape(im.w, im.h, im.c);
 
-    out.reshape(im.w, im.h, im.c);
+    int offset = int(smooth / 2);
+    int wi = im.w - 1;
+    int hi = im.h - 1;
+
     for (int k = 0; k != im.c; ++k)
         for (int y = 0; y != im.h; ++y)
             for (int x = 0; x != im.w; ++x)
             {
+                int ax = vs::clampTo(x - offset - 1, 0, wi);
+                int ay = vs::clampTo(y - offset - 1, 0, hi);
 
+                int bx = vs::clampTo(x + offset, 0, wi);
+                int by = vs::clampTo(y - offset - 1, 0, hi);
 
+                int cx = vs::clampTo(x - offset - 1, 0, wi);
+                int cy = vs::clampTo(y + offset, 0, hi);
+
+                int dx = vs::clampTo(x + offset, 0, wi);
+                int dy = vs::clampTo(y + offset, 0, hi);
+
+                float sum = im.get(dx, dy, k) + im.get(ax, ay, k) - im.get(bx, by, k) - im.get(cx, cy, k);
+                float count = (bx - ax) * (dy - by);
+                out.set(x, y, k, sum / count);
             }
 }
 
@@ -75,23 +92,29 @@ void LucasKanade::timeStructureMatrix(const Mat &im, const Mat &prev, int smooth
 void LucasKanade::velocityImage(const Mat &S, int stride, Mat &v)
 {
     v.reshape(S.w/stride, S.h/stride, 3);
-    int i, j;
-    Mat M(2,2);
+    Mat A(2,2);
+    Mat B(1, 2);
+    Mat P(1, 2);
 
-    for(int j = (stride-1)/2; j < S.h; j += stride){
-        for(int i = (stride-1)/2; i < S.w; i += stride){
-            float Ixx = S.data[i + S.w*j + 0*S.w*S.h];
-            float Iyy = S.data[i + S.w*j + 1*S.w*S.h];
-            float Ixy = S.data[i + S.w*j + 2*S.w*S.h];
-            float Ixt = S.data[i + S.w*j + 3*S.w*S.h];
-            float Iyt = S.data[i + S.w*j + 4*S.w*S.h];
+    for(int y = (stride-1)/2; y < S.h; y += stride){
+        for(int x = (stride-1)/2; x < S.w; x += stride){
 
+            A(0, 0) = S.get(x, y, 0); // Ixx
+            A(0, 1) = S.get(x, y, 2); // Ixy
+            A(1, 0) = S.get(x, y, 2); // Ixy
+            A(1, 1) = S.get(x, y, 1); // Iyy
+
+            B(0, 0) = - S.get(x, y, 3); //Ixt
+            B(1, 0) = - S.get(x, y, 4); //Iyt
             // TODO: calculate vx and vy using the flow equation
-            float vx = 0;
-            float vy = 0;
 
-            v.set(i/stride, j/stride, 0, vx);
-            v.set(i/stride, j/stride, 1, vy);
+            // check for invertability
+           // Mat Ai = A.invert();
+
+            //Mat::vmult(Ai, B, P);
+
+            v.set(x/stride, y/stride, 0, P(0,0));
+            v.set(x/stride, y/stride, 1, P(1,0));
         }
     }
 }
