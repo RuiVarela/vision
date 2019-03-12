@@ -1,6 +1,10 @@
 # release build - make DEBUG=0
 # debug build (default) - make DEBUG=1
 
+
+OPENCV ?= 0
+DEBUG  ?= 1
+
 CC=gcc
 CXX=g++
 RM=rm -f
@@ -9,7 +13,11 @@ CPPFLAGS= -std=c++11
 LDFLAGS=
 LDLIBS=
 
-DEBUG ?= 1
+ifeq ($(OPENCV), 1) 
+	CPPFLAGS+= -DVS_USE_OPENCV $(shell pkg-config --cflags opencv) 
+	LDLIBS+=$(shell pkg-config --libs opencv) 
+endif
+
 ifeq ($(DEBUG), 1)
 	CPPFLAGS +=-g -Wall -pedantic -fwrapv
 	LDFLAGS +=-g

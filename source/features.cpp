@@ -397,12 +397,17 @@ void harrisCornernessResponse(Mat const &s, Mat &R)
     }
 }
 
-static float min_eigenvalue(float a, float b, float c, float d)
+float minEigenValue2x2(float a, float b, float c, float d)
 {
     float common = powf(((a + d) * (a + d))/4 - (a * d - b * c), 0.5);
     float ev_one = (a + d)/2 + common;
     float ev_two = (a + d)/2 - common;
     return (ev_one >= ev_two) ? ev_two : ev_one;
+}
+
+float minEigenValue2x2(Mat const& m) {
+    assert(m.w == 2 && m.h == 2 && m.c == 1);
+    return minEigenValue2x2(m.data[0], m.data[1], m.data[2], m.data[3]);
 }
 
 void shiTomasiCornernessResponse(Mat const &S, Mat &R)
@@ -416,7 +421,7 @@ void shiTomasiCornernessResponse(Mat const &S, Mat &R)
         const float yy = S.data[S.w * S.h * 1 + i];
         const float xy = S.data[S.w * S.h * 2 + i];
 
-        R.data[i] = min_eigenvalue(xx, xy, xy, yy) * multiplier;
+        R.data[i] = minEigenValue2x2(xx, xy, xy, yy) * multiplier;
     }
 }
 

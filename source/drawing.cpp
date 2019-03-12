@@ -112,9 +112,9 @@ void drawLine(Mat &im, float x, float y, float dx, float dy)
     for(i = 0; i < d; i += 1){
         int xi = int(x + dx*i/d);
         int yi = int(y + dy*i/d);
-        im.set(xi, yi, 0, r);
-        im.set(xi, yi, 1, g);
-        im.set(xi, yi, 2, b);
+        im.setClamp(xi, yi, 0, r);
+        im.setClamp(xi, yi, 1, g);
+        im.setClamp(xi, yi, 2, b);
     }
 }
 

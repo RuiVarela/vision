@@ -5,12 +5,14 @@
 #include <cassert>
 #include <cstring>
 
+#include <mutex>
 #include <iostream>
 #include <iomanip>
 #include <algorithm>
 #include <string>
 #include <vector>
 #include <list>
+#include <map>
 #include <memory>
 
 #include "matrix.hpp"

@@ -17,6 +17,10 @@ bool saveImage(std::string path, Mat const &im);
 void rgb2gray(Mat const& src, Mat &dst);
 Mat rgb2gray(Mat const& src);
 
+void rgb2bgr(Mat const& src, Mat &dst);
+Mat rgb2bgr(Mat const& src);
+void rgb2bgrInplace(Mat &inplace);
+
 void rgb2hsv(Mat const& src, Mat &dst);
 Mat rgb2hsv(Mat const& src);
 void rgb2hsvInplace(Mat &inplace);

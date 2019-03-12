@@ -120,12 +120,11 @@ static void test_images()
     vs::Mat b = vs::loadImage("data/dog_b.jpg");
     vs::Mat flow;
     lk.opticalflow(b, a, 15, 8, flow);
-    //draw_flow(a, flow, 8)
-    //save_image(a, "lines")
+    vs::drawFlow(a, flow, 8);
+//    vs::saveImage("dump.png", a);
 
-
-    vs::Mat loaded = vs::loadImage("test/dog-resize-nn.png");
-    UTEST(vs::sameMat(flow, loaded));
+//   vs::Mat loaded = vs::loadImage("test/opticalflow_lines.png");
+//    UTEST(vs::sameMat(a, loaded));
 }
 
 int unit_tests_opticalflow(int argc, char **argv)

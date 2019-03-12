@@ -60,7 +60,7 @@ template <typename T>
 std::ostream &print(MatT<T> const &m, std::ostream &out = std::cout, int max_cols = -1, int max_rows = -1);
 
 
-void showMat(Mat const &a, std::string const& name, int ms);
+int showMat(Mat const &a, std::string const& name, int ms);
 int openStream(std::string const& name);
 void closeStream(int const id);
 void readStream(int const id, vs::Mat& out);

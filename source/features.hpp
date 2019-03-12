@@ -108,6 +108,12 @@ Point projectPoint(Matd const& H, Point const& p);
 // dst - output: image with only local-maxima responses within w pixels.
 void nonMaxSupression(Mat const& im, Mat& dst, int w);
 
+// Gets the minimum eigen value of a 2x2 matrix
+// [a b]
+// [c d]
+float minEigenValue2x2(float a, float b, float c, float d);
+float minEigenValue2x2(Mat const& m);
+
 // Calculate the structure matrix of an image.
 // image im: the input image.
 // float sigma: std dev. to use for weighted sum.

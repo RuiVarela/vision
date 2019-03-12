@@ -46,10 +46,7 @@ struct LucasKanade
     Mat m_prev_gray;
 
     Mat m_I, m_Ii, m_S;
-
-
-
-    Mat v;
+    Mat m_V;
 };
 
 } // namespace vs

@@ -1,5 +1,11 @@
 #include "vs.hpp"
 
+#ifdef VS_USE_OPENCV
+#include <opencv/cv.hpp>
+#include <opencv/highgui.h>
+#endif // VS_USE_OPENCV
+
+
 namespace vs
 {
 
@@ -192,25 +198,108 @@ inline std::ostream &print(MatT<T> const &m, std::ostream &out, int max_cols, in
     return out;
 }
 
+
 #ifdef VS_USE_OPENCV
-void showMat(Mat const &a, std::string const& name, int ms) {
+static std::mutex g_stream_mutex;
+static int g_stream_counter = 0;
+static std::map<int, cv::VideoCapture*> g_captures;
+
+int showMat(Mat const &a, std::string const &name, int ms)
+{
+    Mat copy = a.clone();
+    cv::Mat frame;
+    
+    if (a.c == 1) {
+        frame = cv::Mat(a.h, a.w, CV_8UC1);
+    } else {
+        vs::rgb2bgrInplace(copy);
+        frame = cv::Mat(a.h, a.w, CV_8UC3);
+    }
+    
+    int step = frame.step1();
+    for(int y = 0; y < copy.h; ++y){
+        for(int x = 0; x < copy.w; ++x){
+            for(int k= 0; k < copy.c; ++k){
+                frame.data[y*step + x*copy.c + k] = (unsigned char)(copy.get(x,y,k)*255);
+            }
+        }
+    }
+
+    imshow(name.c_str(), frame);
+    return cv::waitKey(ms);
 }
 
-int openStream(std::string const& name) {
+int openStream(std::string const &name)
+{
+    std::lock_guard<std::mutex> guard(g_stream_mutex);
+    int id = ++g_stream_counter;
+
+    int camera = -1;
+    try
+    {
+        camera = std::stoi(name);
+    }
+    catch (...)
+    {
+    }
+
+    cv::VideoCapture *capture = new cv::VideoCapture();
+    bool ok = false;
+    if (camera >= 0)
+        ok = capture->open(camera);
+    else
+        ok = capture->open(name);
+
+    if (ok)
+    {
+        g_captures[id] = capture;
+        return id;
+    }
+    else
+    {
+        delete (capture);
+    }
+
     return -1;
 }
 
-void closeStream(int const id) {
-
+void closeStream(int const id)
+{
+    std::lock_guard<std::mutex> guard(g_stream_mutex);
+    std::map<int, cv::VideoCapture *>::iterator i = g_captures.find(id);
+    if (i != g_captures.end())
+    {
+        delete (i->second);
+        g_captures.erase(i);
+    }
 }
 
-void readStream(int const id, vs::Mat& out) {
+void readStream(int const id, vs::Mat &out)
+{
+    std::lock_guard<std::mutex> guard(g_stream_mutex);
+    std::map<int, cv::VideoCapture *>::iterator i = g_captures.find(id);
+    if (i == g_captures.end())
+    {
+        out.reshape(0, 0, 0);
+        return;
+    }
+    cv::Mat frame;
+    *(i->second) >> frame;
 
+    out.reshape(frame.cols, frame.rows, frame.channels());
+
+    int step = frame.step1();
+    for (int k = 0; k < out.c; ++k)
+        for (int y = 0; y < out.h; ++y)
+            for (int x = 0; x < out.w; ++x)
+                out.set(x,y,k, frame.data[y * step + x * out.c + k] / 255.);
 }
+
 #else
-void showMat(Mat const &a, std::string const& name, int ms) {
+int showMat(Mat const &a, std::string const& name, int ms) {
     bool opencv_installed = false;
     assert(opencv_installed);
+    return -1;
 }
 
 int openStream(std::string const& name) {

@@ -91,7 +91,11 @@ void LucasKanade::timeStructureMatrix(const Mat &im, const Mat &prev, int smooth
 
 void LucasKanade::velocityImage(const Mat &S, int stride, Mat &v)
 {
+    float eigen_threshold = 0.0002f;
+
     v.reshape(S.w/stride, S.h/stride, 3);
+    v.zero();
+
     Mat A(2,2);
     Mat B(1, 2);
     Mat P(1, 2);
@@ -106,15 +110,18 @@ void LucasKanade::velocityImage(const Mat &S, int stride, Mat &v)
 
             B(0, 0) = - S.get(x, y, 3); //Ixt
             B(1, 0) = - S.get(x, y, 4); //Iyt
-            // TODO: calculate vx and vy using the flow equation
 
             // check for invertability
-           // Mat Ai = A.invert();
-
-            //Mat::vmult(Ai, B, P);
-
-            v.set(x/stride, y/stride, 0, P(0,0));
-            v.set(x/stride, y/stride, 1, P(1,0));
+            if (minEigenValue2x2(A) > eigen_threshold)
+            {
+                Mat Ai = A.invert();
+                if (Ai.size() == 0) {
+                    continue;
+                }
+                Mat::vmult(Ai, B, P);
+                v.set(x / stride, y / stride, 0, P(0, 0));
+                v.set(x / stride, y / stride, 1, P(1, 0));
+            }
         }
     }
 }
@@ -134,10 +141,10 @@ void LucasKanade::opticalflow(const Mat &im, const Mat &prev, int smooth, int st
         rgb2gray(prev, m_prev_gray);        
     
     timeStructureMatrix(m_curr_gray, m_prev_gray, smooth, m_S);
-    velocityImage(m_S, stride, v);
+    velocityImage(m_S, stride, m_V);
 
-    v.constrain(6.0f);
-    vs::smoothImage(v, vs, 2.0);
+    m_V.constrain(6.0f);
+    vs::smoothImage(m_V, vs, 2.0);
 }
 
 

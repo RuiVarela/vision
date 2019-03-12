@@ -219,6 +219,29 @@ void hsv2rgbInplace(Mat &inplace)
     hsv2rgb(inplace, inplace);
 }
 
+void rgb2bgr(Mat const& src, Mat &dst) {
+
+    for(int i = 0; i < src.w * src.h; ++i){
+        float r = src.data[i + src.w*src.h*0];
+        float g = src.data[i + src.w*src.h*1];
+        float b = src.data[i + src.w*src.h*2];
+
+        dst.data[i + src.w*src.h*0] = b;
+        dst.data[i + src.w*src.h*1] = g;
+        dst.data[i + src.w*src.h*2] = r;
+    }
+}
+
+Mat rgb2bgr(Mat const& src) {
+    Mat dst;
+    rgb2bgr(src, dst);
+    return dst;
+}
+
+void rgb2bgrInplace(Mat &inplace) {
+    rgb2bgr(inplace, inplace);
+}
+
 float interpolateNN(Mat const& im, float x, float y, int c)
  {
     const int ix = int(floorf(x));

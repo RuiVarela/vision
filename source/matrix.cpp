@@ -161,7 +161,9 @@ T MatT<T>::getZero(int x, int y, int c) const
 template <typename T>
 MatT<T> &MatT<T>::set(int x, int y, int c, T v)
 {
-    assert(x >= 0 && y >= 0 && c >= 0);
+    assert(x >= 0);
+    assert(y >= 0);
+    assert(c >= 0);
     assert(x < w && y < h && c < this->c);
 
     data[c * h * w + y * w + x] = v;
