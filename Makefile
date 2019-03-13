@@ -22,8 +22,7 @@ ifeq ($(DEBUG), 1)
 	CPPFLAGS +=-g -Wall -pedantic -fwrapv
 	LDFLAGS +=-g
 else
-	CPPFLAGS += -O3 -flto
-    CFLAGS +=-DNDEBUG
+	CPPFLAGS += -O3 -flto -DNDEBUG
 endif
 
 SRCS=$(shell find ./source -name "*.cpp")
@@ -31,7 +30,10 @@ SRCS+=$(shell find ./examples/unit -name "*.cpp")
 
 OBJS=$(subst .cpp,.o,$(SRCS))
 
-all: unit_tests panorama
+all: unit_tests panorama opticalflow
+
+opticalflow: $(OBJS) ./examples/opticalflow.cpp
+	$(CXX) $(LDFLAGS) -o opticalflow $^ $(LDLIBS)
 
 panorama: $(OBJS) ./examples/panorama.cpp
 	$(CXX) $(LDFLAGS) -o panorama $^ $(LDLIBS)
@@ -49,6 +51,7 @@ clean:
 	$(RM) $(OBJS)
 	$(RM) unit_tests
 	$(RM) panorama
-
+	$(RM) opticalflow
+	
 distclean: clean
 	$(RM) *~ .depend

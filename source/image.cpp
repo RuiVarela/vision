@@ -220,6 +220,8 @@ void hsv2rgbInplace(Mat &inplace)
 }
 
 void rgb2bgr(Mat const& src, Mat &dst) {
+    assert(src.c ==3 );
+    dst.reshape(src.w, src.h, 3);
 
     for(int i = 0; i < src.w * src.h; ++i){
         float r = src.data[i + src.w*src.h*0];

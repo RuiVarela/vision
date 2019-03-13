@@ -206,24 +206,13 @@ static std::map<int, cv::VideoCapture*> g_captures;
 
 int showMat(Mat const &a, std::string const &name, int ms)
 {
-    Mat copy = a.clone();
-    cv::Mat frame;
-    
-    if (a.c == 1) {
-        frame = cv::Mat(a.h, a.w, CV_8UC1);
-    } else {
-        vs::rgb2bgrInplace(copy);
-        frame = cv::Mat(a.h, a.w, CV_8UC3);
-    }
-    
+    cv::Mat frame = cv::Mat(a.h, a.w, (a.c == 1) ? CV_8UC1 : CV_8UC3);
+
     int step = frame.step1();
-    for(int y = 0; y < copy.h; ++y){
-        for(int x = 0; x < copy.w; ++x){
-            for(int k= 0; k < copy.c; ++k){
-                frame.data[y*step + x*copy.c + k] = (unsigned char)(copy.get(x,y,k)*255);
-            }
-        }
-    }
+    for (int y = 0; y < a.h; ++y)
+        for (int x = 0; x < a.w; ++x)
+            for (int k = 0; k < a.c; ++k)
+                frame.data[y * step + x * a.c + k] = (unsigned char)(a.get(x, y, k) * 255);
 
     imshow(name.c_str(), frame);
     return cv::waitKey(ms);

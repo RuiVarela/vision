@@ -121,17 +121,27 @@ void drawLine(Mat &im, float x, float y, float dx, float dy)
 void drawFlow(Mat &im, const Mat &v, float scale)
 {
     int stride = im.w / v.w;
-    for (int j = (stride-1)/2; j < im.h; j += stride) {
-        for (int i = (stride-1)/2; i < im.w; i += stride) {
-            float dx = scale * v.get(i/stride, j/stride, 0);
-            float dy = scale * v.get(i/stride, j/stride, 1);
-            if(fabs(dx) > im.w) dx = 0;
-            if(fabs(dy) > im.h) dy = 0;
-            drawLine(im, i, j, dx, dy);
+    for (int y = (stride - 1) / 2; y < im.h; y += stride)
+    {
+        int ty = y / stride;
+        if (ty >= v.h)
+            continue;
+
+        for (int x = (stride - 1) / 2; x < im.w; x += stride)
+        {
+            int tx = x / stride;
+            if (tx >= v.w)
+                continue;
+
+            float dx = scale * v.get(tx, ty, 0);
+            float dy = scale * v.get(tx, ty, 1);
+            if (fabs(dx) > im.w)
+                dx = 0;
+            if (fabs(dy) > im.h)
+                dy = 0;
+            drawLine(im, x, y, dx, dy);
         }
     }
-
 }
-
 
 } // namespace vs

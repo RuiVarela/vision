@@ -100,27 +100,37 @@ void LucasKanade::velocityImage(const Mat &S, int stride, Mat &v)
     Mat B(1, 2);
     Mat P(1, 2);
 
-    for(int y = (stride-1)/2; y < S.h; y += stride){
-        for(int x = (stride-1)/2; x < S.w; x += stride){
+    for (int y = (stride - 1) / 2; y < S.h; y += stride)
+    {
+        int ty = y / stride;
+        if (ty >= v.h)
+            continue;
+
+        for (int x = (stride - 1) / 2; x < S.w; x += stride)
+        {
+
+            int tx = x / stride;
+            if (tx >= v.w)
+                break;
 
             A(0, 0) = S.get(x, y, 0); // Ixx
             A(0, 1) = S.get(x, y, 2); // Ixy
             A(1, 0) = S.get(x, y, 2); // Ixy
             A(1, 1) = S.get(x, y, 1); // Iyy
 
-            B(0, 0) = - S.get(x, y, 3); //Ixt
-            B(1, 0) = - S.get(x, y, 4); //Iyt
+            B(0, 0) = -S.get(x, y, 3); //Ixt
+            B(1, 0) = -S.get(x, y, 4); //Iyt
 
             // check for invertability
             if (minEigenValue2x2(A) > eigen_threshold)
             {
                 Mat Ai = A.invert();
-                if (Ai.size() == 0) {
+                if (Ai.size() == 0)
                     continue;
-                }
+
                 Mat::vmult(Ai, B, P);
-                v.set(x / stride, y / stride, 0, P(0, 0));
-                v.set(x / stride, y / stride, 1, P(1, 0));
+                v.set(tx, ty, 0, P(0, 0));
+                v.set(tx, ty, 1, P(1, 0));
             }
         }
     }
