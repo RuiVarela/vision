@@ -1,8 +1,19 @@
 # vision
-A Vision Playground with no dependencies and no optimizations.
+A Vision Playground with no optimizations, and "almost" no dependencies
 
 This is not intended to be fast. it is intended to be clear.
 
+## Features
+- Planar image represention using floating point operations
+- Basic Mat structure with simple usage
+- Convolutions
+- Nearest Neighbor and Bilinear interpolations and resize
+- Filters (Gaussian, sobel, etc)
+- Harris Corner detector
+- Shi-Tomasi Corner Detection
+- Homography calculation
+- RANSAC fitting example for noisy matched features
+- Lukas Kanade optical flow calculation
 
-if you think you saw this code before, probably you saw it on [darknet](https://github.com/pjreddie/darknet), a  lot of code was just copied from Joseph Redmon source.
+if you think you saw this code before, probably you saw it on Joseph Redmon vision homeworks, or [darknet](https://github.com/pjreddie/darknet).
 
