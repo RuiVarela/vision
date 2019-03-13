@@ -1,7 +1,6 @@
 # vision
-A Vision Playground with no optimizations, and "almost" no dependencies
-
-This is not intended to be fast. it is intended to be clear.
+A playground with no optimizations, and "almost" no dependencies
+It is not intended to be fast. it is intended to be clear.
 
 ## Features
 - Planar image represention using floating point operations
