@@ -191,7 +191,7 @@ static void test_gradients() {
     rgb2gray(im, gray);
 
     vs::Mat gx, gy;
-    vs::gradientGray(gray, gx, gy);
+    vs::gradientSingleChannel(gray, gx, gy);
 
     vs::Mat gx1, gy1;
     gradient(gray, gx1, gy1);
@@ -204,7 +204,7 @@ static void test_sobel() {
     vs::Mat im = vs::loadImage("data/dog.jpg");
     vs::Mat mag;
     vs::Mat theta;
-    vs::sobel(im, mag, theta);
+    vs::gradientMagnitudeAngle(im, mag, theta);
 
     mag.featureNormalize();
     theta.featureNormalize();
@@ -238,7 +238,7 @@ static void test_sobel() {
 static void test_sobel_color() {
     vs::Mat im = vs::loadImage("data/dog.jpg");
     vs::Mat mag, theta;
-    vs::sobel(im, mag, theta);
+    vs::gradientMagnitudeAngle(im, mag, theta);
 
     mag.featureNormalize();
     theta.featureNormalize();
@@ -254,22 +254,31 @@ static void test_sobel_color() {
     UTEST(vs::sameMat(sobel, color));
 }
 
+static void test_canny() {
+    vs::Mat im = vs::loadImage("data/Lenna.png");
+    vs::Mat gray = vs::rgb2gray(im);
+
+    vs::Mat canny;
+    vs::canny(gray, canny,  45.0f / 255.0f, 50.0f / 255.0f, 1.0f);
+}
+
 int unit_tests_filtering(int argc, char **argv)
 {
-    test_nn_resize();
-    test_bl_resize();
-    test_multiple_resize(); // very slow
-    test_convolution();
-    test_highpass_filter();
-    test_emboss_filter();
-    test_sharpen_filter();
-    test_gaussian_filter();
-    test_gaussian_blur();
-    test_hybrid_image();
-    test_frequency_image();
-    test_sobel();
-    test_sobel_color();
-    test_gradients();
+    //test_nn_resize();
+    //test_bl_resize();
+    //test_multiple_resize(); // very slow
+    //test_convolution();
+    //test_highpass_filter();
+    //test_emboss_filter();
+    //test_sharpen_filter();
+    //test_gaussian_filter();
+    //test_gaussian_blur();
+    //test_hybrid_image();
+    //test_frequency_image();
+    //test_sobel();
+    //test_sobel_color();
+    //test_gradients();
+    test_canny();
 
     return 0;
 }

@@ -143,7 +143,7 @@ Mat makeSobelFilter(bool horizontal)
     return filter;
 }
 
-void gradientGray(const Mat &src, Mat &gx, Mat &gy)
+void gradientSingleChannel(const Mat &src, Mat &gx, Mat &gy)
 {
     assert(src.c == 1);
 
@@ -185,10 +185,15 @@ void gradient(vs::Mat const& src, vs::Mat& gx, vs::Mat& gy) {
     convolve(src, gy, makeSobelFilter(false), false);
 }
 
-void sobel(const Mat &src, Mat &mag, Mat &theta)
+void gradientMagnitudeAngle(const Mat &src, Mat &mag, Mat &theta)
 {
     Mat gx, gy;
-    gradient(src, gx, gy);
+
+    if (src.c == 1) {
+        gradientSingleChannel(src, gx, gy);
+    } else {
+        gradient(src, gx, gy);
+    }
 
     mag.reshape(src.w, src.h, 1);
     theta.reshape(src.w, src.h, 1);
@@ -197,7 +202,7 @@ void sobel(const Mat &src, Mat &mag, Mat &theta)
     {
         float gx_v = gx.data[i];
         float gy_v = gy.data[i];
-        mag.data[i] = sqrtf(gx_v * gx_v + gy_v * gy_v);
+        mag.data[i] = std ::hypotf(gx_v, gy_v);
         theta.data[i] = atan2(gy_v, gx_v);
     }
 }
@@ -258,6 +263,109 @@ Mat convolve(const Mat &src, const Mat &filter, bool preserve)
     convolve(src, dst, filter, preserve);
     return dst;
 }
+
+//http://www.rosettacode.org/wiki/Canny_edge_detector
+//http://justin-liang.com/tutorials/canny/
+void canny(const Mat &src, Mat &dst, const float tmin, const float tmax, const float sigma)
+{
+    assert(src.c == 1);
+    dst.reshape(src.w, src.h, 2);
+
+    smoothImage(src, dst, sigma);
+
+    Mat mag, angle;
+    gradientMagnitudeAngle(dst, mag, angle);
+
+    // Non-maximum suppression, straightforward implementation.
+    const float pi = float(M_PI);
+    Mat nms = angle; // reuse memory
+    for (int x = 1; x < src.w - 1; x++)
+        for (int y = 1; y < src.h - 1; y++) {
+            const int c = x + src.w * y;
+            const int nn = c - src.w;
+            const int ss = c + src.w;
+            const int ww = c + 1;
+            const int ee = c - 1;
+            const int nw = nn + 1;
+            const int ne = nn - 1;
+            const int sw = ss + 1;
+            const int se = ss - 1;
+
+            const float dir = (fmodf(angle.data[c] + pi, pi) / pi) * 8;
+
+            if (
+                    ((dir <= 1 || dir > 7) && mag.data[c] > mag.data[ee] &&
+                     mag.data[c] > mag.data[ww]) || // 0 deg
+
+                    ((dir > 1 && dir <= 3) && mag.data[c] > mag.data[nw] &&
+                     mag.data[c] > mag.data[se]) || // 45 deg
+
+                    ((dir > 3 && dir <= 5) && mag.data[c] > mag.data[nn] &&
+                     mag.data[c] > mag.data[ss]) || // 90 deg
+
+                    ((dir > 5 && dir <= 7) && mag.data[c] > mag.data[ne] &&
+                     mag.data[c] > mag.data[sw]) // 135 deg
+                    )
+                nms.data[c] = mag.data[c];
+            else
+                nms.data[c] = 0;
+        }
+
+    // angle now holds the nms result
+
+
+    // Reuse array
+    // used as a stack. nx*ny/2 elements should be enough.
+    Mat edges = mag; // reuse memory
+    edges.zero();
+    dst.zero();
+
+
+    // Tracing edges with hysteresis . Non-recursive implementation.
+    const float max_brightness = 1.0f;
+    size_t c = 1;
+    for (int y = 1; y < dst.h - 1; y++)
+        for (int x = 1; x < dst.w - 1; x++) {
+            if (nms.data[c] >= tmax && vs::equivalent(dst.data[c], 0.0f)) { // trace edges
+
+                dst.data[c] = max_brightness;
+                int nedges = 1;
+                edges.data[0] = c;
+
+                do {
+
+                    nedges--;
+                    const int t = int(edges[nedges]);
+                     /*
+                    int nbs[8]; // neighbours
+                    nbs[0] = t - nx;     // nn
+                    nbs[1] = t + nx;     // ss
+                    nbs[2] = t + 1;      // ww
+                    nbs[3] = t - 1;      // ee
+                    nbs[4] = nbs[0] + 1; // nw
+                    nbs[5] = nbs[0] - 1; // ne
+                    nbs[6] = nbs[1] + 1; // sw
+                    nbs[7] = nbs[1] - 1; // se
+
+                    for (int k = 0; k < 8; k++)
+                        if (nms[nbs[k]] >= tmin && out[nbs[k]] == 0) {
+                            out[nbs[k]] = MAX_BRIGHTNESS;
+                            edges[nedges] = nbs[k];
+                            nedges++;
+                        }
+                        */
+                } while (nedges > 0);
+            }
+            c++;
+        }
+
+
+    //nms.featureNormalize();
+    saveImage("nms.png", nms);
+}
+
+
+
 
 
 

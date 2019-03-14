@@ -139,7 +139,8 @@ void drawFlow(Mat &im, const Mat &v, float scale)
                 dx = 0;
             if (fabs(dy) > im.h)
                 dy = 0;
-            drawLine(im, x, y, dx, dy);
+
+            drawLine(im, x, y, int(dx), int(dy));
         }
     }
 }
