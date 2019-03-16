@@ -13,6 +13,7 @@ It is not intended to be fast. it is intended to be clear.
 - Homography calculation
 - RANSAC fitting example for noisy matched features
 - Lukas Kanade optical flow calculation
+- Canny Edge Detector
 
 if you think you saw this code before, probably you saw it on Joseph Redmon vision homeworks, or [darknet](https://github.com/pjreddie/darknet).
 
