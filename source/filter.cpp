@@ -269,7 +269,7 @@ Mat convolve(const Mat &src, const Mat &filter, bool preserve)
 void canny(const Mat &src, Mat &dst, const float tmin, const float tmax, const float sigma)
 {
     assert(src.c == 1);
-    dst.reshape(src.w, src.h, 2);
+    dst.reshape(src.w, src.h, 1);
 
     smoothImage(src, dst, sigma);
 
@@ -278,7 +278,8 @@ void canny(const Mat &src, Mat &dst, const float tmin, const float tmax, const f
 
     // Non-maximum suppression, straightforward implementation.
     const float pi = float(M_PI);
-    Mat nms = angle; // reuse memory
+    Mat nms;
+    nms.reshape(src.w, src.h, 1);
     for (int x = 1; x < src.w - 1; x++)
         for (int y = 1; y < src.h - 1; y++) {
             const int c = x + src.w * y;
@@ -311,35 +312,32 @@ void canny(const Mat &src, Mat &dst, const float tmin, const float tmax, const f
                 nms.data[c] = 0;
         }
 
-    // angle now holds the nms result
-
-
-    // Reuse array
-    // used as a stack. nx*ny/2 elements should be enough.
-    Mat edges = mag; // reuse memory
+    // Reuse memory, used as a stack. nx*ny/2 elements should be enough.
+    Mat edges = mag;
     edges.zero();
     dst.zero();
-
 
     // Tracing edges with hysteresis . Non-recursive implementation.
     const float max_brightness = 1.0f;
     size_t c = 1;
     for (int y = 1; y < dst.h - 1; y++)
-        for (int x = 1; x < dst.w - 1; x++) {
-            if (nms.data[c] >= tmax && vs::equivalent(dst.data[c], 0.0f)) { // trace edges
+        for (int x = 1; x < dst.w - 1; x++)
+        {
+            if (nms.data[c] >= tmax && vs::equivalent(dst.data[c], 0.0f))
+            { // trace edges
 
                 dst.data[c] = max_brightness;
                 int nedges = 1;
                 edges.data[0] = c;
 
-                do {
-
+                do
+                {
                     nedges--;
-                    const int t = int(edges[nedges]);
-                     /*
-                    int nbs[8]; // neighbours
-                    nbs[0] = t - nx;     // nn
-                    nbs[1] = t + nx;     // ss
+                    const int t = int(edges.data[nedges]);
+
+                    int nbs[8];          // neighbours
+                    nbs[0] = t - src.w;  // nn
+                    nbs[1] = t + src.w;  // ss
                     nbs[2] = t + 1;      // ww
                     nbs[3] = t - 1;      // ee
                     nbs[4] = nbs[0] + 1; // nw
@@ -348,20 +346,16 @@ void canny(const Mat &src, Mat &dst, const float tmin, const float tmax, const f
                     nbs[7] = nbs[1] - 1; // se
 
                     for (int k = 0; k < 8; k++)
-                        if (nms[nbs[k]] >= tmin && out[nbs[k]] == 0) {
-                            out[nbs[k]] = MAX_BRIGHTNESS;
-                            edges[nedges] = nbs[k];
+                        if (nms.data[nbs[k]] >= tmin && vs::equivalent(dst.data[nbs[k]], 0.0f))
+                        {
+                            dst.data[nbs[k]] = max_brightness;
+                            edges.data[nedges] = nbs[k];
                             nedges++;
-                        }
-                        */
+                        }    
                 } while (nedges > 0);
             }
             c++;
         }
-
-
-    //nms.featureNormalize();
-    saveImage("nms.png", nms);
 }
 
 

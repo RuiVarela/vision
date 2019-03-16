@@ -2,7 +2,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "make all",
+            "label": "build all",
             "type": "shell",
             "command": "make",
             "args": [ "all" ],
