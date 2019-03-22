@@ -22,3 +22,4 @@
 #include "features.hpp"
 #include "drawing.hpp"
 #include "opticalflow.hpp"
+#include "optimization.hpp"

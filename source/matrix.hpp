@@ -125,5 +125,7 @@ private:
 
 using Mat = MatT<float>;
 using Matd = MatT<double>;
+using Mati = MatT<int>;
+using Matl = MatT<long>;
 
 } // namespace vs
