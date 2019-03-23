@@ -68,9 +68,9 @@ public:
     // transpose
     MatT transpose() const;
 
-    T sum(int c); // sums all values in a channel
-    T max(int c); // max value in a channel
-    T min(int c); // min value in a channel
+    T sum(int c = 0); // sums all values in a channel
+    T max(int c = 0); // max value in a channel
+    T min(int c = 0); // min value in a channel
     void minNmax(int c, T& minv, T& maxv); // min and max value in a channel
 
     // normalizes a channels using l1norm
@@ -89,6 +89,7 @@ public:
     const T &operator()(int const row, int const col) const;
     T &operator()(int const row, int const col);
 
+    MatT rowm(int const row);
 
     MatT &setIdentity();
 

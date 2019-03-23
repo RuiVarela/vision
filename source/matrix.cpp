@@ -470,6 +470,12 @@ T &MatT<T>::operator()(const int row, const int col)
 {
     return data[row * w + col];
 }
+template <typename T>
+MatT<T> MatT<T>::rowm(int const row) {
+    MatT<T> single(w, 1);
+asda
+    return single;
+}
 
 template <typename T>
 MatT<T> &MatT<T>::setIdentity()
