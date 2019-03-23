@@ -124,6 +124,19 @@ template <typename T>
 MatT<T> &MatT<T>::copy(MatT<T> const &src, int dst_x, int dst_y)
 {
     return copy(src, 0, 0, src.w, src.h, dst_x, dst_y);
+
+}
+
+template <typename T>
+MatT<T> MatT<T>::rowm(int const row) const
+{
+    MatT<T> single(w, 1, c);
+
+    for (int k = 0; k != c; ++k)
+        for (int x = 0; x != w; ++x)
+            single.set(x, 0, k, get(x, row, k));
+
+    return single;
 }
 
 template <typename T>
@@ -469,12 +482,6 @@ template <typename T>
 T &MatT<T>::operator()(const int row, const int col)
 {
     return data[row * w + col];
-}
-template <typename T>
-MatT<T> MatT<T>::rowm(int const row) {
-    MatT<T> single(w, 1);
-asda
-    return single;
 }
 
 template <typename T>

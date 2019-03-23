@@ -2,14 +2,6 @@
 
 namespace vs
 {
-
-float Point::distance(const Point &p, const Point &q)
-{
-    float x = q.x - p.x;
-    float y = q.y - p.y;
-    return sqrtf(x * x + y * y);
-}
-
 void Descriptor::reshape(int size)
 {
     if (n == size)

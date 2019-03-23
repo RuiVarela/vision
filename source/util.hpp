@@ -9,13 +9,19 @@ template <typename T>
 inline T minimum(T const a, T const b) { return (a < b) ? a : b; }
 
 template <typename T>
-inline T minimum(T const a, T const b, T const c) { return (a < b) ? ((a < c) ? a : c) : ((b < c) ? b : c); }
+inline T minimum(T const a, T const b, T const c) { return minimum(minimum(a, b), c); }
+
+template <typename T>
+inline T minimum(T const a, T const b, T const c, T const d) { return minimum(minimum(a, b, c), d); }
 
 template <typename T>
 inline T maximum(T const a, T const b) { return (a > b) ? a : b; }
 
 template <typename T>
-inline T maximum(T const a, T const b, T const c) { return (a > b) ? ((a > c) ? a : c) : ((b > c) ? b : c); }
+inline T maximum(T const a, T const b, T const c) { return maximum(maximum(a, b), c); }
+
+template <typename T>
+inline T maximum(T const a, T const b, T const c, T const d) { return maximum(maximum(a, b, c),d); }
 
 template <typename T>
 inline T absolute(T const value) { return ((value < T(0.0)) ? -value : value); }

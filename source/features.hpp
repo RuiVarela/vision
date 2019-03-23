@@ -5,24 +5,6 @@
 namespace vs
 {
 
-// A 2d point.
-// float x, y: the coordinates of the point.
-struct Point
-{
-    Point() :x(0.0f), y(0.0f) {}
-    Point(float px, float py) :x(px), y(py) {}
-
-    float x;
-    float y;
-
-    // Calculate L2 distance between two points.
-    // Minkowski distance between two points of order 2
-    // https://en.wikipedia.org/wiki/Minkowski_distance
-    // point p, q: points.
-    // returns: L2 distance between them.
-    static float distance(Point const& p, Point const& q);
-};
-
 // A descriptor for a point in an image.
 // point p: x,y coordinates of the image pixel.
 // int n: the number of floating point values in the descriptor.

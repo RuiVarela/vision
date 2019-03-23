@@ -37,6 +37,9 @@ public:
     MatT &copy(MatT const& src, int src_x, int src_y, int src_w, int src_h, int dst_x, int dst_y);
     MatT &copy(MatT const& src, int dst_x, int dst_y); 
 
+    // get a row from a matrix
+    MatT rowm(int const row) const;
+
     // channel values get/set
     T get(int x, int y = 0, int c = 0) const;
     T getClamp(int x, int y, int c) const;
@@ -88,8 +91,6 @@ public:
     //
     const T &operator()(int const row, int const col) const;
     T &operator()(int const row, int const col);
-
-    MatT rowm(int const row);
 
     MatT &setIdentity();
 

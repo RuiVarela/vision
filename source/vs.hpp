@@ -13,6 +13,7 @@
 #include <vector>
 #include <list>
 #include <map>
+#include <deque>
 #include <memory>
 
 #include "matrix.hpp"

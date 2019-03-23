@@ -7,7 +7,7 @@ namespace vs
 
 // this code was copied from dlib
 // http://dlib.net/dlib/optimization/max_cost_assignment.h.html
-using Assignment = std::vector<size_t>;
+using Assignment = std::vector<long>;
 using CostMatrix = Matl;
 
 // calculates the actual cost for the input assigment
