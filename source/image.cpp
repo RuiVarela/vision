@@ -404,48 +404,50 @@ void extractImage4points(Mat const &im, Mat &dst, const std::array<Point, 4> &po
     float min_x = vs::minimum(points[0].x, points[1].x, points[2].x, points[3].x);
     float min_y = vs::minimum(points[0].y, points[1].y, points[2].y, points[3].y);
     //tl, tr, bl, br
-    std::array<Point, 4> corners = {};
+    std::array<Point, 4> corners = {
+        Point(min_x, min_y), Point(max_x, min_y),
+        Point(min_x, max_y), Point(max_x, max_y)};
 
+
+    // cumpute a distance matrix
     Mat distances(4, 4);
-
-    /*
-     const_image_view<image_type> img(img_);
-        image_view<image_type> out(out_);
-        if (out.size() == 0)
-            return;
-
-        drectangle bounding_box;
-        for (auto& p : pts)
-            bounding_box += p;
-
-        const std::array<dpoint,4> corners = {{bounding_box.tl_corner(), bounding_box.tr_corner(),
-                                               bounding_box.bl_corner(), bounding_box.br_corner()}};
-
-        matrix<double> dists(4,4);
-        for (long r = 0; r < dists.nr(); ++r)
+    for (size_t y = 0; y < distances.h; ++y)
+        for (size_t x = 0; x < distances.w; ++x)
         {
-            for (long c = 0; c < dists.nc(); ++c)
-            {
-                dists(r,c) = length_squared(corners[r] - pts[c]);
-            }
+            float dx = corners[y].x - points[x].x;
+            float dy = corners[y].y - points[x].y;
+            distances(y, x) = dx * dx + dy * dy;
         }
 
-        matrix<long long> idists = matrix_cast<long long>(-round(std::numeric_limits<long long>::max()*(dists/max(dists))));
+    // convert to integer values
+    // since we will use max cost, flip sign
+    float max_distance = distances.max();
+    int max_integer = std::numeric_limits<int>::max();
 
+    Matl idistances(4, 4);
+    for (size_t y = 0; y < idistances.h; ++y)
+        for (size_t x = 0; x < idistances.w; ++x)
+        {
+            double distance = distances(y, x) / max_distance;
+            distance *= double(max_integer);
+            idistances(y, x) = - std::round(distance); 
+        }
 
-        const drectangle area = get_rect(out);
-        std::vector<dpoint> from_points = {area.tl_corner(), area.tr_corner(),
-                                           area.bl_corner(), area.br_corner()};
+    // find the assignment of corners to pts
+    Assignment assignment = assignmentMaxCost(idistances);
 
-        // find the assignment of corners to pts
-        auto assignment = max_cost_assignment(idists);
-        std::vector<dpoint> to_points(4);
-        for (size_t i = 0; i < assignment.size(); ++i)
-            to_points[i] = pts[assignment[i]];
+    // from_points tl, tr, bl, br
+    Matches matches(4);
+    matches[0].p = Point(0.0f, 0.0f);
+    matches[1].p = Point(dst.w - 1, 0.0f);
+    matches[2].p = Point(0.0f, dst.h - 1);
+    matches[3].p = Point(dst.w - 1, dst.h - 1);
 
-        auto tform = find_projective_transform(from_points, to_points);
-        transform_image(img_, out_, interpolate_bilinear(), tform);
-        */
+    // to_points tl, tr, bl, br
+    matches[0].q = points[size_t(assignment[0])];
+    matches[1].q = points[size_t(assignment[1])];
+    matches[2].q = points[size_t(assignment[2])];
+    matches[3].q = points[size_t(assignment[3])];
 }
 
 } // namespace vs

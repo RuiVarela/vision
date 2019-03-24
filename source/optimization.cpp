@@ -8,7 +8,7 @@ long assignmentCost(const CostMatrix &cost, const Assignment &assignment)
     assert(cost.w == cost.h);
     assert(assignment.size() > 0);
 
-    long sum = 0;
+    CostT sum = 0;
     for (size_t i = 0; i < assignment.size(); ++i)
         sum += cost(int(i), int(assignment[i]));
 
@@ -17,10 +17,10 @@ long assignmentCost(const CostMatrix &cost, const Assignment &assignment)
 
 inline void compute_slack(
     const size_t x,
-    std::vector<long> &slack,
-    std::vector<long> &slackx,
+    std::vector<CostT> &slack,
+    std::vector<CostT> &slackx,
     const CostMatrix &cost,
-    const std::vector<long> &lx, const std::vector<long> &ly)
+    const std::vector<CostT> &lx, const std::vector<CostT> &ly)
 {
     const size_t cost_nc = cost.w;
 
@@ -50,12 +50,12 @@ Assignment assignmentMaxCost(const CostMatrix &cost)
     if (cost.size() == 0)
         return Assignment();
 
-    std::vector<long> lx, ly;
+    std::vector<CostT> lx, ly;
     Assignment xy, yx;
     std::vector<bool> S, T;
-    std::vector<long> slack;
-    std::vector<long> slackx;
-    std::vector<long> aug_path;
+    std::vector<CostT> slack;
+    std::vector<CostT> slackx;
+    std::vector<CostT> aug_path;
 
     const size_t cost_nc = cost.w;
     const size_t cost_nr = cost.h;
@@ -84,14 +84,14 @@ Assignment assignmentMaxCost(const CostMatrix &cost)
     // we have a complete matching.
     for (size_t match_size = 0; match_size < cost_nc; ++match_size)
     {
-        std::deque<long> q;
+        std::deque<CostT> q;
 
         // Empty out the S and T sets
         S.assign(cost_nc, false);
         T.assign(cost_nc, false);
 
         // clear out old slack values
-        slack.assign(cost_nc, std::numeric_limits<long>::max());
+        slack.assign(cost_nc, std::numeric_limits<CostT>::max());
         slackx.resize(cost_nc);
 
         // slack and slackx are maintained such that we always
@@ -115,8 +115,8 @@ Assignment assignmentMaxCost(const CostMatrix &cost)
             }
         }
 
-        long x_start = 0;
-        long y_start = 0;
+        CostT x_start = 0;
+        CostT y_start = 0;
 
         // Find an augmenting path.
         bool found_augmenting_path = false;
@@ -124,7 +124,7 @@ Assignment assignmentMaxCost(const CostMatrix &cost)
         {
             while (q.size() > 0 && !found_augmenting_path)
             {
-                const long x = q.front();
+                const CostT x = q.front();
                 q.pop_front();
                 for (size_t y = 0; y < cost_nc; ++y)
                 {
@@ -155,7 +155,7 @@ Assignment assignmentMaxCost(const CostMatrix &cost)
             // Since we didn't find an augmenting path we need to improve the
             // feasible labeling stored in lx and ly.  We also need to keep the
             // slack updated accordingly.
-            long delta = std::numeric_limits<long>::max();
+            CostT delta = std::numeric_limits<CostT>::max();
             for (size_t i = 0; i < T.size(); ++i)
             {
                 if (!T[i])
@@ -203,7 +203,7 @@ Assignment assignmentMaxCost(const CostMatrix &cost)
 
         // Flip the edges along the augmenting path.  This means we will add one more
         // item to our matching.
-        for (long cx = x_start, cy = y_start, ty;
+        for (CostT cx = x_start, cy = y_start, ty;
              cx != -1;
              cx = aug_path[cx], cy = ty)
         {

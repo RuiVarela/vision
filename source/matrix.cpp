@@ -674,9 +674,7 @@ template class MatT<double>;
 template void MatT<double>::convert(MatT<float> &out);
 template MatT<float> MatT<double>::convert();
 
-
-template class MatT<int>;
-template class MatT<long>;
+template class MatT<long long>;
 
 
 } // namespace vs
