@@ -279,20 +279,15 @@ static void test_extract_image_4_points() {
     points[2] = vs::Point(217, 667);
     points[3] = vs::Point(554, 208);
     vs::extractImage4points(im, frame, points);
-    vs::saveImage("warp.png", frame);
-    /*
-    vs::Mat canny;
-    vs::canny(gray, canny,  0.10f, 0.50f, 0.8f);
 
-    //vs::saveImage("canny.png", canny);
+    //vs::saveImage("warp.png", frame);
 
-    vs::Mat lcanny = vs::loadImage("test/lenna_canny.png");
-    UTEST(vs::sameMat(canny, lcanny));*/
+    vs::Mat warped = vs::loadImage("test/fireframe_warped.png");
+    UTEST(vs::sameMat(frame, warped));
 }
 
 int unit_tests_filtering(int argc, char **argv)
 {
-    /*
     test_nn_resize();
     test_bl_resize();
     test_multiple_resize(); // very slow
@@ -308,7 +303,6 @@ int unit_tests_filtering(int argc, char **argv)
     test_sobel_color();
     test_gradients();
     test_canny();
-    */
     test_extract_image_4_points();
 
     return 0;

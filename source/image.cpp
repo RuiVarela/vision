@@ -409,28 +409,30 @@ void extractImage4points(Mat const &im, Mat &dst, const std::array<Point, 4> &po
         Point(min_x, max_y), Point(max_x, max_y)};
 
 
-    // cumpute a distance matrix
+    // compute a distance matrix
     Mat distances(4, 4);
-    for (size_t y = 0; y < distances.h; ++y)
-        for (size_t x = 0; x < distances.w; ++x)
+    size_t d_size = 4;
+
+    for (size_t y = 0; y < d_size; ++y)
+        for (size_t x = 0; x < d_size; ++x)
         {
             float dx = corners[y].x - points[x].x;
             float dy = corners[y].y - points[x].y;
-            distances(y, x) = dx * dx + dy * dy;
+            distances(int(y), int(x)) = dx * dx + dy * dy;
         }
 
     // convert to integer values
     // since we will use max cost, flip sign
-    float max_distance = distances.max();
+    double max_distance = double(distances.max());
     int max_integer = std::numeric_limits<int>::max();
 
-    Matl idistances(4, 4);
-    for (size_t y = 0; y < idistances.h; ++y)
-        for (size_t x = 0; x < idistances.w; ++x)
+    Matl idistances(distances.w, distances.h);
+    for (int y = 0; y < idistances.h; ++y)
+        for (int x = 0; x < idistances.w; ++x)
         {
-            double distance = distances(y, x) / max_distance;
+            double distance = double(distances(y, x)) / max_distance;
             distance *= double(max_integer);
-            idistances(y, x) = - std::round(distance); 
+            idistances(y, x) = Matl::Type(-std::round(distance));
         }
 
     // find the assignment of corners to pts
@@ -448,6 +450,28 @@ void extractImage4points(Mat const &im, Mat &dst, const std::array<Point, 4> &po
     matches[1].q = points[size_t(assignment[1])];
     matches[2].q = points[size_t(assignment[2])];
     matches[3].q = points[size_t(assignment[3])];
+
+
+    Matd H = computeHomography(matches);
+    if (H.size() == 0) {
+        return;
+    }
+
+    // warp image
+    for (int k = 0; k < dst.c; ++k)
+        for (int y = 0; y < dst.h; ++y)
+            for (int x = 0; x < dst.w; ++x)
+            {
+                vs::Point p = vs::projectPoint(H, vs::Point(x, y));
+                int px = int(p.x);
+                int py = int(p.y);
+                if (px < 0 || px >= im.w || py < 0 || py >= im.h)
+                    continue;
+
+                float value = vs::interpolateBL(im, px, py, k);
+                dst.set(x, y, k, value);
+            }
+
 }
 
 } // namespace vs
