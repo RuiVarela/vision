@@ -22,8 +22,9 @@ It is not intended to be fast. it is intended to be clear.
 This started as a fun exercise to solve Joseph Redmon CSE 455 homeworks. so at its core the base structure should resemble his assigments
 - [Vision Homework 1](https://github.com/pjreddie/vision-hw0)
 - [Vision Homework 2](https://github.com/pjreddie/vision-hw1)  
-- [Vision Homework 3](https://github.com/pjreddie/vision-hw2) 
-Additionally [Darknet](https://github.com/pjreddie/darknet) is also an inspiration.
+- [Vision Homework 3](https://github.com/pjreddie/vision-hw2)
+
+[Darknet](https://github.com/pjreddie/darknet) is also an inspiration.
 
 The MatT class has been updadted to work as an image and a math matrix, a bit like opencv.
 Canny has been ported from [Rosetta Code implementation](https://rosettacode.org/wiki/Canny_edge_detector)
