@@ -4,7 +4,6 @@
 
 namespace vs
 {
-
 // this code was copied from dlib
 // http://dlib.net/dlib/optimization/max_cost_assignment.h.html
 using CostT = long long;

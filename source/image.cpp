@@ -9,13 +9,6 @@
 namespace vs
 {
 
-float Point::distance(const Point &p, const Point &q)
-{
-    float x = q.x - p.x;
-    float y = q.y - p.y;
-    return sqrtf(x * x + y * y);
-}
-
 Mat loadImage(std::string path, int channels)
 {
     path = toNativeSeparators(path);
@@ -93,12 +86,12 @@ bool saveImage(std::string path, Mat const &im)
 
 void rgb2gray(Mat const &src, Mat &dst)
 {
-    assert(src.w >= 0 && src.h >= 0 && src.c == 3);
+    assert(src.w >= 0 && src.h >= 0 && ((src.c == 3) || (src.c == 4)));
     dst.reshape(src.w, src.h, 1);
     dst.zero();
 
     static float scale[] = {0.299f, 0.587f, 0.114f};
-    for (int k = 0; k < src.c; ++k)
+    for (int k = 0; k < 3; ++k)
     {
         for (int j = 0; j < src.h; ++j)
         {
@@ -295,6 +288,103 @@ void rgb2bgrInplace(Mat &inplace)
     rgb2bgr(inplace, inplace);
 }
 
+
+Mat::Type thresholdOtsu(const Mat &src, Mat &dst, const ThresholdMode mode, const Mat::Type max)
+{
+    assert(src.c == 1);
+    dst.reshape(src.w, src.h, src.c);
+
+    int const bins = 256;
+    double const size = src.size();
+
+    double histogram[bins];
+    memset(histogram, 0, bins * sizeof(double));
+
+    float const bin_size = 1.0f / bins;
+
+    // compute the histogram
+    for (int i = 0; i < src.channelSize(); ++i) {
+        int bin = clampTo(int(src.data[i] / bin_size), 0, bins - 1);
+        histogram[bin] += 1.0;
+    }
+
+    for(int i = 0; i <= 255; i++) {
+        histogram[i] /= size;
+    }
+
+    // compute probabilities
+    //
+    // probability = class probability
+    // mean = class mean
+    // between = between class variance
+    //
+    double probability[bins];
+    double mean[bins];
+    double max_between = 0.0;
+    double between[bins];
+    int threshold_bin = 0;
+    memset(probability, 0, bins * sizeof(double));
+    memset(mean, 0, bins * sizeof(double));
+    memset(between, 0, bins * sizeof(double));
+
+    probability[0] = histogram[0];
+    for (size_t i = 1; i < bins; ++i) {
+        probability[i] = probability[i - 1] + histogram[i];
+        mean[i] = mean[i - 1] + i * histogram[i];
+    }
+
+    for(size_t i = 0; i < bins; i++) {
+
+        if(probability[i] > 0.0 && probability[i] < 1.0)
+            between[i] = pow(mean[bins - 1] * probability[i] - mean[i], 2) / (probability[i] * (1.0 - probability[i]));
+        else
+            between[i] = 0.0;
+
+        if(between[i] > max_between) {
+            max_between = between[i];
+            threshold_bin = int(i);
+        }
+    }
+
+    float value = clampTo(threshold_bin + 1, 0, bins - 1) * bin_size;
+    return threshold(src, dst, mode, value, max);
+}
+
+Mat::Type threshold(const Mat &src, Mat &dst, const ThresholdMode mode, const Mat::Type value, const Mat::Type max)
+{
+    assert(src.c == 1);
+
+    dst.reshape(src.w, src.h, src.c);
+
+    if (mode == ThresholdMode::Binary) {
+
+        for (int i = 0; i < src.channelSize(); ++i)
+            dst.data[i] = src.data[i] > value ? max : 0;
+
+    } else if (mode == ThresholdMode::BinaryInverted) {
+
+        for (int i = 0; i < src.channelSize(); ++i)
+            dst.data[i] = src.data[i] > value ? 0 : max;
+
+    } else if (mode == ThresholdMode::Truncate) {
+
+        for (int i = 0; i < src.channelSize(); ++i)
+            dst.data[i] = src.data[i] > value ? max : src.data[i];
+
+    } else if (mode == ThresholdMode::ToZero) {
+
+        for (int i = 0; i < src.channelSize(); ++i)
+            dst.data[i] = src.data[i] > value ? src.data[i] : 0;
+
+    } else if (mode == ThresholdMode::ToZeroInverted) {
+
+        for (int i = 0; i < src.channelSize(); ++i)
+            dst.data[i] = src.data[i] > value ? 0 : src.data[i];
+    }
+
+    return value;
+}
+
 float interpolateNN(Mat const &im, float x, float y, int c)
 {
     const int ix = int(floorf(x));
@@ -392,21 +482,21 @@ vs::Mat cylindricalProject(vs::Mat const &im, float f)
     return out;
 }
 
-void extractImage4points(Mat const &im, Mat &dst, const std::array<Point, 4> &points)
+void extractImage4points(Mat const &im, Mat &dst, const std::array<Pointi, 4> &points)
 {
     assert(im.c == dst.c);
     assert(dst.w > 0);
     assert(dst.h > 0);
 
-    float max_x = vs::maximum(points[0].x, points[1].x, points[2].x, points[3].x);
-    float max_y = vs::maximum(points[0].y, points[1].y, points[2].y, points[3].y);
+    int max_x = vs::maximum(points[0].x, points[1].x, points[2].x, points[3].x);
+    int max_y = vs::maximum(points[0].y, points[1].y, points[2].y, points[3].y);
 
-    float min_x = vs::minimum(points[0].x, points[1].x, points[2].x, points[3].x);
-    float min_y = vs::minimum(points[0].y, points[1].y, points[2].y, points[3].y);
+    int min_x = vs::minimum(points[0].x, points[1].x, points[2].x, points[3].x);
+    int min_y = vs::minimum(points[0].y, points[1].y, points[2].y, points[3].y);
     //tl, tr, bl, br
-    std::array<Point, 4> corners = {
-        Point(min_x, min_y), Point(max_x, min_y),
-        Point(min_x, max_y), Point(max_x, max_y)};
+    std::array<Pointi, 4> corners = {
+        Pointi(min_x, min_y), Pointi(max_x, min_y),
+        Pointi(min_x, max_y), Pointi(max_x, max_y)};
 
 
     // compute a distance matrix

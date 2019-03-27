@@ -3,18 +3,17 @@
 namespace vs
 {
 
-void markSpot(Mat &im, Point const &p)
+void markSpot(Mat &im, Pointi const &p)
 {
-    int x = int(p.x);
-    int y = int(p.y);
+
     for (int i = -9; i < 10; ++i)
     {
-        im.setClamp(x + i, y, 0, 1);
-        im.setClamp(x, y + i, 0, 1);
-        im.setClamp(x + i, y, 1, 0);
-        im.setClamp(x, y + i, 1, 0);
-        im.setClamp(x + i, y, 2, 1);
-        im.setClamp(x, y + i, 2, 1);
+        im.setClamp(p.x + i, p.y, 0, 1);
+        im.setClamp(p.x, p.y + i, 0, 1);
+        im.setClamp(p.x + i, p.y, 1, 0);
+        im.setClamp(p.x, p.y + i, 1, 0);
+        im.setClamp(p.x + i, p.y, 2, 1);
+        im.setClamp(p.x, p.y + i, 2, 1);
     }
 }
 

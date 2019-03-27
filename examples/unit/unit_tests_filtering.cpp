@@ -273,11 +273,11 @@ static void test_extract_image_4_points() {
     int mm = 10;
     vs::Mat frame(28 * mm, 48 * mm, im.c);
 
-    std::array<vs::Point, 4> points;
-    points[0] = vs::Point(227, 169);
-    points[1] = vs::Point(459, 763);
-    points[2] = vs::Point(217, 667);
-    points[3] = vs::Point(554, 208);
+    std::array<vs::Pointi, 4> points;
+    points[0] = vs::Pointi(227, 169);
+    points[1] = vs::Pointi(459, 763);
+    points[2] = vs::Pointi(217, 667);
+    points[3] = vs::Pointi(554, 208);
     vs::extractImage4points(im, frame, points);
 
     //vs::saveImage("warp.png", frame);

@@ -5,24 +5,6 @@
 namespace vs
 {
 
-// A 2d point.
-// float x, y: the coordinates of the point.
-struct Point
-{
-    Point() :x(0.0f), y(0.0f) {}
-    Point(float px, float py) :x(px), y(py) {}
-
-    float x;
-    float y;
-
-    // Calculate L2 distance between two points.
-    // Minkowski distance between two points of order 2
-    // https://en.wikipedia.org/wiki/Minkowski_distance
-    // point p, q: points.
-    // returns: L2 distance between them.
-    static float distance(Point const& p, Point const& q);
-};
-
 Mat loadImage(std::string path, int channels = 0);
 bool saveImage(std::string path, Mat const &im);
 
@@ -40,6 +22,17 @@ void rgb2hsvInplace(Mat &inplace);
 void hsv2rgb(Mat const& src, Mat &dst);
 Mat hsv2rgb(Mat const& src);
 void hsv2rgbInplace(Mat &inplace);
+
+
+enum ThresholdMode {
+    Binary,
+    BinaryInverted,
+    Truncate,
+    ToZero,
+    ToZeroInverted
+};
+Mat::Type threshold(Mat const& src, Mat &dst, ThresholdMode const mode, Mat::Type const value, Mat::Type const max = 1.0f);
+Mat::Type thresholdOtsu(Mat const& src, Mat &dst, ThresholdMode const mode, Mat::Type const max = 1.0f);
 
 
 enum ResizeMode
@@ -65,5 +58,5 @@ vs::Mat cylindricalProject(vs::Mat const &im, float f);
 // quadrilateral and map its vertices to their nearest rectangle corners.  These
 // corners are then trivially mapped to dst (i.e.  upper left corner to upper
 // left corner, upper right corner to upper right corner, etc.).
-void extractImage4points(Mat const& im, Mat &dst, const std::array<Point,4>& points);
+void extractImage4points(Mat const& im, Mat &dst, const std::array<Pointi,4>& points);
 } // namespace vs

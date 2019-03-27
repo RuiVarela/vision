@@ -129,4 +129,31 @@ using Mat = MatT<float>;
 using Matd = MatT<double>;
 using Matl = MatT<long long>;
 
+
+// A 2d point.
+// x, y: the coordinates of the point.
+template<typename T>
+struct PointT
+{
+    using Type = T;
+
+    PointT();
+    PointT(T const px, T const py);
+
+    template<typename TO> operator PointT<TO>() const;
+
+
+    // Calculate L2 distance between two points.
+    // Minkowski distance between two points of order 2
+    // https://en.wikipedia.org/wiki/Minkowski_distance
+    // point p, q: points.
+    // returns: L2 distance between them.
+    static T distance(PointT const& p, PointT const& q);
+
+    T x;
+    T y;
+};
+using Point = PointT<float>;
+using Pointi = PointT<int>;
+
 } // namespace vs

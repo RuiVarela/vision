@@ -8,7 +8,7 @@ namespace vs
 // Marks the spot of a point in an image.
 // image im: image to mark.
 // point p: spot to mark in the image.
-void markSpot(Mat &im, Point const& p);
+void markSpot(Mat &im, Pointi const& p);
 
 // Marks corners denoted by an array of descriptors.
 // image im: image to mark.

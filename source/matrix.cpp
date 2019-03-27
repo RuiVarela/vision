@@ -664,6 +664,37 @@ MatT<T> MatT<T>::llsSolve(MatT<T> const &M, MatT<T> const &b)
 }
 
 //
+// Point
+//
+template<typename T>
+PointT<T>::PointT()
+    :x(0), y(0)
+{
+}
+
+template<typename T>
+PointT<T>::PointT(const T px, const T py)
+    :x(px), y(py)
+{
+}
+
+template <typename T>
+template <typename TO>
+PointT<T>::operator PointT<TO>() const
+{
+    return PointT<TO>(TO(x), TO(y));
+}
+
+template<typename T>
+T PointT<T>::distance(const PointT<T> &p, const PointT<T> &q) {
+
+    T x = q.x - p.x;
+    T y = q.y - p.y;
+    return T(sqrtf(float(x * x + y * y)));
+}
+
+
+//
 // force template instantiation
 //
 template class MatT<float>;
@@ -675,6 +706,16 @@ template void MatT<double>::convert(MatT<float> &out);
 template MatT<float> MatT<double>::convert();
 
 template class MatT<long long>;
+
+
+
+template class PointT<float>;
+template PointT<float>::operator PointT<int>() const;
+
+template class PointT<int>;
+template PointT<int>::operator PointT<float>() const;
+
+
 
 
 } // namespace vs
