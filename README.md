@@ -27,7 +27,8 @@ This started as a fun exercise to solve Joseph Redmon CSE 455 homeworks. so at i
 
 [Darknet](https://github.com/pjreddie/darknet) is also an inspiration.
 
-The MatT class has been updadted to work as an image and a math matrix, a bit like opencv.
+The MatT class has been updadted to work as an image and a math matrix, a bit like opencv.   
+
 Canny has been ported from [Rosetta Code implementation](https://rosettacode.org/wiki/Canny_edge_detector)
 
 Max Cost Assigment which is needed to perform image warping based on 4 points has been ported from [dlib](http://dlib.net/dlib/optimization/max_cost_assignment.h.html)
