@@ -17,6 +17,7 @@ It is not intended to be fast. it is intended to be clear.
 - Canny Edge Detector
 - Max Cost Assigment
 - Image rectangle extraction and warping
+- Thresholding (Binary, BinaryInverted, Truncate, ToZero, ToZeroInverted) with otsu
 
 # Sources
 This started as a fun exercise to solve Joseph Redmon CSE 455 homeworks. so at its core the base structure should resemble his assigments
