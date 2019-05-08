@@ -9,12 +9,22 @@ namespace vs
 // returns: image I such that I[x,y] = sum{i<=x, j<=y}(im[i,j])
 void makeIntegralImage(Mat const& im, Mat& out);
 
+//
+// Gets an integral image info for a region
+// c - channel
+// ltrb - Corners
+// sum = sumed area
+// count = pixed count used in sum
+//
+void getIntegralImageRegion(Mat const& im, int c,
+                            int l, int t, int r, int b,
+                            float& sum, int& count);
+
 // Apply a box filter to an image using an integral image for speed
 // image im: image to smooth
 // int s: window size for box filter
 // returns: smoothed image
 void boxfilterIntegralImage(Mat const& im, int smooth, Mat& out);
-
 
 struct LucasKanade
 {

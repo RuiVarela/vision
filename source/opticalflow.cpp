@@ -26,6 +26,41 @@ void makeIntegralImage(const Mat &im, Mat &out)
             }
 }
 
+
+void getIntegralImageRegion(const Mat &im, int c, int l, int t, int r, int b, float &sum, int &count)
+{
+    if (l < 0)
+        l = 0;
+
+    if (t < 0)
+        t = 0;
+
+    if (r >= im.w)
+        r = im.w - 1;
+
+    if (b >= im.h)
+        b = im.h - 1;
+
+    float A = 0;
+    float B = 0;
+    float C = 0;
+    float D = im.get(r, b, c);
+
+    if (l - 1 >= 0 && t - 1 >= 0) {
+        A = im.get(l - 1, t - 1, c);
+        B = im.get(r, t - 1, c);
+        C = im.get(l - 1, b, c);
+    } else if (l - 1 >= 0) {
+        C = im.get(l - 1, b, c);
+    } else if (t - 1 >= 0) {
+        B = im.get(r, t - 1, c);
+    }
+
+    sum = D + A - B - C;
+    count = (r - l + 1) * (b - t + 1);
+}
+
+
 void boxfilterIntegralImage(const Mat &im, int smooth, Mat &out)
 {
     out.reshape(im.w, im.h, im.c);
@@ -38,21 +73,15 @@ void boxfilterIntegralImage(const Mat &im, int smooth, Mat &out)
         for (int y = 0; y != im.h; ++y)
             for (int x = 0; x != im.w; ++x)
             {
-                int ax = vs::clampTo(x - offset - 1, 0, wi);
-                int ay = vs::clampTo(y - offset - 1, 0, hi);
+                int l = x - offset;
+                int t = y - offset;
+                int r = x + offset;
+                int b = y + offset;
 
-                int bx = vs::clampTo(x + offset, 0, wi);
-                int by = vs::clampTo(y - offset - 1, 0, hi);
-
-                int cx = vs::clampTo(x - offset - 1, 0, wi);
-                int cy = vs::clampTo(y + offset, 0, hi);
-
-                int dx = vs::clampTo(x + offset, 0, wi);
-                int dy = vs::clampTo(y + offset, 0, hi);
-
-                float sum = im.get(dx, dy, k) + im.get(ax, ay, k) - im.get(bx, by, k) - im.get(cx, cy, k);
-                float count = (bx - ax) * (dy - by);
-                out.set(x, y, k, sum / count);
+                float sum;
+                int count;
+                getIntegralImageRegion(im, k, l, t, r, b, sum, count);
+                out.set(x, y, k, sum / float(count));
             }
 }
 
@@ -156,6 +185,8 @@ void LucasKanade::opticalflow(const Mat &im, const Mat &prev, int smooth, int st
     m_V.constrain(6.0f);
     vs::smoothImage(m_V, vs, 2.0);
 }
+
+
 
 
 
