@@ -3,9 +3,9 @@ A playground with no optimizations, and "almost" no dependencies
 It is not intended to be fast. it is intended to be clear.
 
 ## Features
-- Planar image represention using floating point operations
+- Planar image represention using floats
 - Basic Mat structure with simple usage
-- Nearest Neighbor and Bilinear interpolations and resize
+- Nearest Neighbor and Bilinear interpolation resize
 - Color Conversion (rgb <-> hsv)
 - Convolutions
 - Filters (Gaussian, sobel, etc)
